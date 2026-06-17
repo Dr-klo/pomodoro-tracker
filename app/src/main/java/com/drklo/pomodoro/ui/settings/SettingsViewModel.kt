@@ -27,7 +27,8 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
     fun setSound(value: Boolean) = viewModelScope.launch { settingsRepo.setSoundEnabled(value) }
     fun setVibrate(value: Boolean) = viewModelScope.launch { settingsRepo.setVibrateEnabled(value) }
     fun setAlwaysOn(value: Boolean) = viewModelScope.launch { settingsRepo.setAlwaysOnDisplay(value) }
-    fun setAutostart(value: Boolean) = viewModelScope.launch { settingsRepo.setAutostart(value) }
+    fun setAutostartPomodoros(value: Boolean) = viewModelScope.launch { settingsRepo.setAutostartPomodoros(value) }
+    fun setAutostartBreaks(value: Boolean) = viewModelScope.launch { settingsRepo.setAutostartBreaks(value) }
     fun setIdleAlertMinutes(value: Int) = viewModelScope.launch { settingsRepo.setIdleAlertMinutes(value) }
     fun setDayEnd(hour: Int, minute: Int) = viewModelScope.launch { settingsRepo.setDayEnd(hour, minute) }
     fun setLanguage(language: AppLanguage) = viewModelScope.launch { settingsRepo.setLanguage(language) }

@@ -28,7 +28,8 @@
     <string name="setting_sound">Звуки</string>
     <string name="setting_vibrate">Вибрация</string>
     <string name="setting_always_on">Не гасить экран</string>
-    <string name="setting_autostart">Автозапуск следующего интервала</string>
+    <string name="setting_autostart_pomodoros">Автозапуск помидорок</string>
+    <string name="setting_autostart_breaks">Автозапуск пауз</string>
     <string name="setting_idle_alert">Алерт при простое</string>
     <string name="setting_idle_alert_summary">Менять цвета экрана каждые N мин при простое (только при включённом экране)</string>
     <string name="setting_day_end">Конец дня</string>

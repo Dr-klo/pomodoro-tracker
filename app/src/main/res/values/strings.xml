@@ -28,7 +28,8 @@
     <string name="setting_sound">Sounds</string>
     <string name="setting_vibrate">Vibration</string>
     <string name="setting_always_on">Keep screen on</string>
-    <string name="setting_autostart">Autostart next interval</string>
+    <string name="setting_autostart_pomodoros">Autostart pomodoros</string>
+    <string name="setting_autostart_breaks">Autostart breaks</string>
     <string name="setting_idle_alert">Idle alert</string>
     <string name="setting_idle_alert_summary">Flip screen colors every N min while idle (screen-on only)</string>
     <string name="setting_day_end">End of day</string>

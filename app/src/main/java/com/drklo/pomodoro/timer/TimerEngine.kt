@@ -155,9 +155,12 @@ class TimerEngine(
         cancelTick()
         val remaining = remainingFromDeadline()
         _state.update { it.copy(status = TimerStatus.PAUSED, remainingSeconds = remaining) }
+        // Idle alert also applies to a forgotten pause (#2).
+        startIdleAlert()
     }
 
     private fun resume() {
+        stopIdleAlert()
         val s = _state.value
         deadlineElapsed = SystemClock.elapsedRealtime() + s.remainingSeconds * 1000L
         _state.update { it.copy(status = TimerStatus.RUNNING) }
@@ -213,7 +216,8 @@ class TimerEngine(
 
         _state.value = next
 
-        if (settings.autostart) {
+        val autostartNext = if (next.phase.isBreak) settings.autostartBreaks else settings.autostartPomodoros
+        if (autostartNext) {
             start(userInitiated = false)
         } else {
             startIdleAlert()
@@ -247,22 +251,39 @@ class TimerEngine(
         return ceil(remainingMs / 1000.0).toInt().coerceAtLeast(0)
     }
 
+    /** The timer is stalled when paused or between phases awaiting the next one. */
+    private fun isStalled(): Boolean {
+        val s = _state.value
+        return s.status == TimerStatus.PAUSED || (s.status == TimerStatus.IDLE && s.awaitingNext)
+    }
+
     private fun startIdleAlert() {
         stopIdleAlert()
         val minutes = settings.idleAlertMinutes
         if (minutes <= 0) return
         idleJob = scope.launch {
-            while (_state.value.awaitingNext) {
+            while (isStalled()) {
                 delay(minutes * 60_000L)
-                if (!_state.value.awaitingNext) break
-                _state.update { it.copy(idleAlertActive = !it.idleAlertActive) }
+                if (!isStalled()) break
+                // Gentle strobe: a few quick color flips over ~2s (not a permanent switch, #5).
+                repeat(IDLE_STROBE_BLINKS) {
+                    if (!isStalled()) return@launch
+                    _state.update { it.copy(idleAlertActive = true) }
+                    delay(IDLE_STROBE_HALF_MS)
+                    _state.update { it.copy(idleAlertActive = false) }
+                    delay(IDLE_STROBE_HALF_MS)
+                }
             }
+            _state.update { it.copy(idleAlertActive = false) }
         }
     }
 
     private fun stopIdleAlert() {
         idleJob?.cancel()
         idleJob = null
+        if (_state.value.idleAlertActive) {
+            _state.update { it.copy(idleAlertActive = false) }
+        }
     }
 
     // --- Stats ----------------------------------------------------------------------------
@@ -280,5 +301,10 @@ class TimerEngine(
             val today = statsRepository.completedCount(project.id, currentDayKey())
             _state.update { if (it.project?.id == project.id) it.copy(completedToday = today) else it }
         }
+    }
+
+    private companion object {
+        const val IDLE_STROBE_BLINKS = 3
+        const val IDLE_STROBE_HALF_MS = 320L
     }
 }

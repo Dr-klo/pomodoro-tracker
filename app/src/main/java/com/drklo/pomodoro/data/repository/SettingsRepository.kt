@@ -22,6 +22,7 @@ class SettingsRepository(private val context: Context) {
         val VIBRATE = booleanPreferencesKey("vibrate_enabled")
         val ALWAYS_ON = booleanPreferencesKey("always_on_display")
         val AUTOSTART = booleanPreferencesKey("autostart")
+        val AUTOSTART_BREAKS = booleanPreferencesKey("autostart_breaks")
         val IDLE_ALERT_MIN = intPreferencesKey("idle_alert_minutes")
         val DAY_END_HOUR = intPreferencesKey("day_end_hour")
         val DAY_END_MINUTE = intPreferencesKey("day_end_minute")
@@ -34,7 +35,8 @@ class SettingsRepository(private val context: Context) {
             soundEnabled = p[Keys.SOUND] ?: defaults.soundEnabled,
             vibrateEnabled = p[Keys.VIBRATE] ?: defaults.vibrateEnabled,
             alwaysOnDisplay = p[Keys.ALWAYS_ON] ?: defaults.alwaysOnDisplay,
-            autostart = p[Keys.AUTOSTART] ?: defaults.autostart,
+            autostartPomodoros = p[Keys.AUTOSTART] ?: defaults.autostartPomodoros,
+            autostartBreaks = p[Keys.AUTOSTART_BREAKS] ?: defaults.autostartBreaks,
             idleAlertMinutes = p[Keys.IDLE_ALERT_MIN] ?: defaults.idleAlertMinutes,
             dayEndHour = p[Keys.DAY_END_HOUR] ?: defaults.dayEndHour,
             dayEndMinute = p[Keys.DAY_END_MINUTE] ?: defaults.dayEndMinute,
@@ -45,7 +47,8 @@ class SettingsRepository(private val context: Context) {
     suspend fun setSoundEnabled(value: Boolean) = edit { it[Keys.SOUND] = value }
     suspend fun setVibrateEnabled(value: Boolean) = edit { it[Keys.VIBRATE] = value }
     suspend fun setAlwaysOnDisplay(value: Boolean) = edit { it[Keys.ALWAYS_ON] = value }
-    suspend fun setAutostart(value: Boolean) = edit { it[Keys.AUTOSTART] = value }
+    suspend fun setAutostartPomodoros(value: Boolean) = edit { it[Keys.AUTOSTART] = value }
+    suspend fun setAutostartBreaks(value: Boolean) = edit { it[Keys.AUTOSTART_BREAKS] = value }
     suspend fun setIdleAlertMinutes(value: Int) = edit { it[Keys.IDLE_ALERT_MIN] = value.coerceAtLeast(0) }
 
     suspend fun setDayEnd(hour: Int, minute: Int) = edit {

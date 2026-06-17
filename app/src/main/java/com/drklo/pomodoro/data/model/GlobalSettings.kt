@@ -8,7 +8,10 @@ data class GlobalSettings(
     val soundEnabled: Boolean = true,
     val vibrateEnabled: Boolean = true,
     val alwaysOnDisplay: Boolean = false,
-    val autostart: Boolean = false,
+    /** Auto-start the next pomodoro after a break ends (F-015). */
+    val autostartPomodoros: Boolean = false,
+    /** Auto-start the break after a pomodoro ends. */
+    val autostartBreaks: Boolean = false,
     /** Idle alert period in minutes; 0 disables the alert (F-012). */
     val idleAlertMinutes: Int = 0,
     /** Time of day (local) at which a new logical day begins (F-022). Default = midnight. */

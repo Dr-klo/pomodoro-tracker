@@ -53,6 +53,7 @@ fun TimerDial(
     fraction: Float,
     color: Color,
     status: TimerStatus,
+    showHand: Boolean,
     onTap: () -> Unit,
     onLongHoldComplete: () -> Unit,
     modifier: Modifier = Modifier
@@ -121,6 +122,24 @@ fun TimerDial(
                 size = arcSize,
                 style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
             )
+            // Clock hand pointing at the tip of the remaining arc, only while counting down (#1).
+            if (showHand) {
+                val center = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height / 2f)
+                val handLength = (size.minDimension - strokeWidth) / 2f
+                val angleRad = Math.toRadians(-90.0 + 360.0 * fraction.coerceIn(0f, 1f))
+                val handEnd = androidx.compose.ui.geometry.Offset(
+                    center.x + (handLength * kotlin.math.cos(angleRad)).toFloat(),
+                    center.y + (handLength * kotlin.math.sin(angleRad)).toFloat()
+                )
+                drawLine(
+                    color = color,
+                    start = center,
+                    end = handEnd,
+                    strokeWidth = strokeWidth * 0.28f,
+                    cap = StrokeCap.Round
+                )
+                drawCircle(color = color, radius = strokeWidth * 0.45f, center = center)
+            }
             // Hold-to-reset indicator (thin outer ring filling while held).
             if (holdProgress.value > 0f) {
                 val outerStroke = strokeWidth * 0.35f

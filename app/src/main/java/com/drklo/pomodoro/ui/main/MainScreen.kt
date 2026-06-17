@@ -143,8 +143,9 @@ private fun ProjectPage(
         else 1f
     val filledBullets = if (isActive) state.completedInSession else 0
 
-    // Phase color is the BACKGROUND; foreground stays white (#3). Idle alert flips the color (#6).
-    val flip = isActive && state.awaitingNext && state.idleAlertActive
+    // Phase color is the BACKGROUND; foreground stays white (#3). Idle alert strobes the color (#6);
+    // idleAlertActive is only ever true while stalled (paused or awaiting next), so this is safe.
+    val flip = isActive && state.idleAlertActive
     val bgColor: Color = when {
         flip -> Color(if (phase == Phase.POMODORO) project.breakColor else project.pomodoroColor)
         else -> Color(project.colorFor(phase))
@@ -172,6 +173,7 @@ private fun ProjectPage(
             fraction = fraction,
             color = fg,
             status = status,
+            showHand = status == TimerStatus.RUNNING,
             onTap = onTap,
             onLongHoldComplete = onReset,
             modifier = dialModifier

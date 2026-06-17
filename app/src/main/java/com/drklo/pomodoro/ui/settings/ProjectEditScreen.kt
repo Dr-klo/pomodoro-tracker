@@ -45,10 +45,17 @@ import com.drklo.pomodoro.data.model.Preset
 import com.drklo.pomodoro.ui.common.Stepper
 
 private val ColorPalette = listOf(
+    // Bright / saturated
     Color(0xFFE53935), Color(0xFFD81B60), Color(0xFF8E24AA), Color(0xFF5E35B1),
-    Color(0xFF3949AB), Color(0xFF1E88E5), Color(0xFF00ACC1), Color(0xFF00897B),
-    Color(0xFF43A047), Color(0xFF7CB342), Color(0xFFFB8C00), Color(0xFFF4511E),
-    Color(0xFF6D4C41), Color(0xFF757575)
+    Color(0xFF3949AB), Color(0xFF1E88E5), Color(0xFF039BE5), Color(0xFF00ACC1),
+    Color(0xFF00897B), Color(0xFF43A047), Color(0xFF7CB342), Color(0xFFC0CA33),
+    Color(0xFFFDD835), Color(0xFFFFB300), Color(0xFFFB8C00), Color(0xFFF4511E),
+    // Muted / desaturated
+    Color(0xFFB07A6E), Color(0xFF9C6E8E), Color(0xFF7E8AA2), Color(0xFF6E94A0),
+    Color(0xFF6FA08A), Color(0xFF8DA06E), Color(0xFFB39B6E), Color(0xFFB58A8A),
+    // Dark / dull / neutral
+    Color(0xFF6D4C41), Color(0xFF546E7A), Color(0xFF607D8B), Color(0xFF455A64),
+    Color(0xFF5D4037), Color(0xFF424242), Color(0xFF757575), Color(0xFF37474F)
 )
 
 @OptIn(ExperimentalMaterial3Api::class)

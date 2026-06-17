@@ -104,7 +104,10 @@ fun SettingsScreen(
                 SwitchRow(stringResource(R.string.setting_always_on), settings.alwaysOnDisplay, viewModel::setAlwaysOn)
             }
             item {
-                SwitchRow(stringResource(R.string.setting_autostart), settings.autostart, viewModel::setAutostart)
+                SwitchRow(stringResource(R.string.setting_autostart_pomodoros), settings.autostartPomodoros, viewModel::setAutostartPomodoros)
+            }
+            item {
+                SwitchRow(stringResource(R.string.setting_autostart_breaks), settings.autostartBreaks, viewModel::setAutostartBreaks)
             }
             item {
                 Stepper(

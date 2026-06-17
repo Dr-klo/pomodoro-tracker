@@ -37,6 +37,7 @@ import com.drklo.pomodoro.R
 import com.drklo.pomodoro.ui.reports.components.ChartCard
 import com.drklo.pomodoro.ui.reports.components.PeriodChart
 import com.drklo.pomodoro.ui.reports.components.WeekJournal
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,6 +111,14 @@ fun ReportsScreen(
                             stat(stringResource(R.string.stat_total), summary.totalPomodoros.toString()),
                             stat(stringResource(R.string.stat_today), summary.todayPomodoros.toString()),
                             stat(stringResource(R.string.stat_week), summary.weekPomodoros.toString())
+                        )
+                        PeriodChart(
+                            title = stringResource(R.string.chart_pomodoros_over_time),
+                            logs = logs,
+                            projects = projects,
+                            today = today,
+                            valueOf = { 1f },
+                            summaryFormatter = { it.roundToInt().toString() }
                         )
                     }
                 }

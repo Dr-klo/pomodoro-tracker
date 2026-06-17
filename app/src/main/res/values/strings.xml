@@ -9,6 +9,9 @@
     <!-- Timer notification -->
     <string name="timer_channel_name">Timer</string>
     <string name="timer_channel_desc">Shows the running pomodoro timer</string>
+    <string name="notif_pause">Pause</string>
+    <string name="notif_resume">Resume</string>
+    <string name="notif_reset">Reset</string>
 
     <!-- Main screen -->
     <string name="minutes_short">MIN</string>

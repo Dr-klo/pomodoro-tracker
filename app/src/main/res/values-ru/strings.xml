@@ -9,6 +9,9 @@
     <!-- Timer notification -->
     <string name="timer_channel_name">Таймер</string>
     <string name="timer_channel_desc">Показывает идущий таймер помодоро</string>
+    <string name="notif_pause">Пауза</string>
+    <string name="notif_resume">Продолжить</string>
+    <string name="notif_reset">Сброс</string>
 
     <!-- Main screen -->
     <string name="minutes_short">МИН</string>

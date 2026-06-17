@@ -43,6 +43,10 @@ class TimerService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        when (intent?.action) {
+            ACTION_TOGGLE -> engine.togglePlayPause()
+            ACTION_RESET -> engine.reset()
+        }
         startForeground(NOTIFICATION_ID, buildNotification())
         if (observeJob == null) {
             observeJob = scope.launch {
@@ -81,7 +85,7 @@ class TimerService : Service() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        return NotificationCompat.Builder(this, CHANNEL_ID)
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_timer_notification)
             .setContentTitle(title)
             .setContentText(text)
@@ -90,7 +94,26 @@ class TimerService : Service() {
             .setOngoing(true)
             .setSilent(true)
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
-            .build()
+
+        // Pause/Resume + Reset controls (F-101).
+        if (state.status == TimerStatus.RUNNING) {
+            builder.addAction(R.drawable.ic_notif_pause, getString(R.string.notif_pause), actionPendingIntent(ACTION_TOGGLE))
+        } else {
+            builder.addAction(R.drawable.ic_notif_play, getString(R.string.notif_resume), actionPendingIntent(ACTION_TOGGLE))
+        }
+        builder.addAction(R.drawable.ic_notif_reset, getString(R.string.notif_reset), actionPendingIntent(ACTION_RESET))
+
+        return builder.build()
+    }
+
+    private fun actionPendingIntent(action: String): PendingIntent {
+        val intent = Intent(this, TimerService::class.java).setAction(action)
+        return PendingIntent.getService(
+            this,
+            action.hashCode(),
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
     }
 
     private fun createChannel() {
@@ -113,6 +136,8 @@ class TimerService : Service() {
     companion object {
         private const val CHANNEL_ID = "timer_channel"
         private const val NOTIFICATION_ID = 1001
+        private const val ACTION_TOGGLE = "com.drklo.pomodoro.action.TOGGLE"
+        private const val ACTION_RESET = "com.drklo.pomodoro.action.RESET"
 
         fun start(context: Context) {
             val intent = Intent(context, TimerService::class.java)

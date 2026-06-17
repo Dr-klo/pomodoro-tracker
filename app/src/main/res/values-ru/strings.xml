@@ -39,6 +39,10 @@
     <string name="chart_avg_max">сред. %1$s · макс %2$s</string>
     <string name="chart_focus_over_time">Время фокуса по периодам</string>
     <string name="chart_pomodoros_over_time">Помидорки по периодам</string>
+    <string name="chart_time_distribution">Распределение времени</string>
+    <string name="chart_time_by_project">Время по проектам</string>
+    <string name="chart_total">Всего: %1$s</string>
+    <string name="chart_no_data">Нет данных за период</string>
 
     <!-- Settings -->
     <string name="title_settings">Настройки</string>

@@ -35,8 +35,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.drklo.pomodoro.R
 import com.drklo.pomodoro.ui.reports.components.ChartCard
+import com.drklo.pomodoro.ui.reports.components.DonutChart
 import com.drklo.pomodoro.ui.reports.components.PeriodChart
 import com.drklo.pomodoro.ui.reports.components.WeekJournal
+import com.drklo.pomodoro.ui.reports.components.WindowChart
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -112,6 +114,25 @@ fun ReportsScreen(
                             stat(stringResource(R.string.stat_today), summary.todayPomodoros.toString()),
                             stat(stringResource(R.string.stat_week), summary.weekPomodoros.toString())
                         )
+                        WindowChart(
+                            title = stringResource(R.string.chart_time_distribution),
+                            logs = logs,
+                            projects = projects,
+                            today = today,
+                            valueOf = { it.durationSeconds.toFloat() },
+                            subtitle = { vals ->
+                                stringResource(
+                                    R.string.chart_total,
+                                    formatFocus(vals.sumOf { it.value.toDouble() }.toInt(), hLabel, mLabel)
+                                )
+                            }
+                        ) { vals ->
+                            DonutChart(
+                                values = vals,
+                                centerLabel = formatFocus(vals.sumOf { it.value.toDouble() }.toInt(), hLabel, mLabel)
+                            )
+                        }
+
                         PeriodChart(
                             title = stringResource(R.string.chart_pomodoros_over_time),
                             logs = logs,

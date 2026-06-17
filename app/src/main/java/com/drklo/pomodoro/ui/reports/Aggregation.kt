@@ -63,6 +63,50 @@ fun periodLabel(buckets: List<DateBucket>): String {
     return "${buckets.first().start.format(dayMonth)} – ${buckets.last().endInclusive.format(dayMonth)}"
 }
 
+private val monthYear: DateTimeFormatter = DateTimeFormatter.ofPattern("LLLL yyyy")
+
+/** A single aggregation window (one day/week/month) for snapshot charts; page 0 = current. */
+fun windowFor(agg: Aggregation, today: LocalDate, page: Int, locale: Locale): DateBucket =
+    when (agg) {
+        Aggregation.DAY -> {
+            val d = today.minusDays(page.toLong())
+            DateBucket(d.format(dayMonth), d, d)
+        }
+        Aggregation.WEEK -> {
+            val weekStart = today
+                .minusDays((today.dayOfWeek.value - DayOfWeek.MONDAY.value).toLong())
+                .minusWeeks(page.toLong())
+            val end = weekStart.plusDays(6)
+            DateBucket("${weekStart.format(dayMonth)} – ${end.format(dayMonth)}", weekStart, end)
+        }
+        Aggregation.MONTH -> {
+            val ms = today.withDayOfMonth(1).minusMonths(page.toLong())
+            DateBucket(ms.format(monthYear.withLocale(locale)), ms, ms.plusMonths(1).minusDays(1))
+        }
+    }
+
+/** Per-project aggregated value within a window, sorted descending and filtered to > 0. */
+data class ProjectValue(val projectId: Long, val name: String, val colorArgb: Int, val value: Float)
+
+fun sumByProject(
+    logs: List<PomodoroLog>,
+    window: DateBucket,
+    projects: List<Project>,
+    valueOf: (PomodoroLog) -> Float
+): List<ProjectValue> {
+    val sums = HashMap<Long, Float>()
+    for (log in logs) {
+        val date = runCatching { LocalDate.parse(log.dayKey) }.getOrNull() ?: continue
+        if (window.contains(date)) sums[log.projectId] = (sums[log.projectId] ?: 0f) + valueOf(log)
+    }
+    return projects
+        .mapNotNull { p ->
+            val v = sums[p.id] ?: 0f
+            if (v > 0f) ProjectValue(p.id, p.name, p.pomodoroColor, v) else null
+        }
+        .sortedByDescending { it.value }
+}
+
 /**
  * Aggregates [logs] into stacked bars over [buckets], one segment per project (in [projects] order),
  * using [valueOf] per log (e.g. focus seconds or a constant 1 for counts).

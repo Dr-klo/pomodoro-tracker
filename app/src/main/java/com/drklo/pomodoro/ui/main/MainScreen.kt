@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,6 +54,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 @Composable
 fun MainScreen(
     onOpenSettings: () -> Unit,
+    onOpenReports: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: MainViewModel = viewModel()
 ) {
@@ -104,20 +106,28 @@ fun MainScreen(
             )
         }
 
-        // Burger menu — hidden during the active session for minimalism (F-019).
+        // Reports + burger — hidden during the active session for minimalism (F-019).
         if (!isRunning) {
-            IconButton(
-                onClick = onOpenSettings,
+            Row(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .statusBarsPadding()
-                    .padding(8.dp)
+                    .padding(4.dp)
             ) {
-                Icon(
-                    Icons.Filled.Menu,
-                    contentDescription = stringResource(R.string.cd_settings),
-                    tint = Color.White
-                )
+                IconButton(onClick = onOpenReports) {
+                    Icon(
+                        Icons.Filled.BarChart,
+                        contentDescription = stringResource(R.string.cd_reports),
+                        tint = Color.White
+                    )
+                }
+                IconButton(onClick = onOpenSettings) {
+                    Icon(
+                        Icons.Filled.Menu,
+                        contentDescription = stringResource(R.string.cd_settings),
+                        tint = Color.White
+                    )
+                }
             }
         }
 

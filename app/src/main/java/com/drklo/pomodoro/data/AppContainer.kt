@@ -19,10 +19,12 @@ class AppContainer(context: Context) {
         context.applicationContext,
         AppDatabase::class.java,
         AppDatabase.NAME
-    ).build()
+    ).addMigrations(AppDatabase.MIGRATION_1_2).build()
 
     val projectRepository: ProjectRepository by lazy { ProjectRepository(database.projectDao()) }
-    val statsRepository: StatsRepository by lazy { StatsRepository(database.dayStatDao()) }
+    val statsRepository: StatsRepository by lazy {
+        StatsRepository(database.dayStatDao(), database.pomodoroLogDao())
+    }
     val settingsRepository: SettingsRepository by lazy { SettingsRepository(context.applicationContext) }
 
     private val timerEffects: TimerEffects by lazy { TimerEffects(context.applicationContext) }

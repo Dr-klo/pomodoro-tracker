@@ -1,10 +1,17 @@
 package com.drklo.pomodoro.data.repository
 
 import com.drklo.pomodoro.data.db.DayStatDao
+import com.drklo.pomodoro.data.db.PomodoroLogDao
+import com.drklo.pomodoro.data.db.PomodoroLogEntity
+import com.drklo.pomodoro.data.db.toDomain
+import com.drklo.pomodoro.data.model.PomodoroLog
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class StatsRepository(private val dao: DayStatDao) {
+class StatsRepository(
+    private val dao: DayStatDao,
+    private val logDao: PomodoroLogDao
+) {
 
     /** Observes the completed-pomodoro count for a project on a given logical day. */
     fun observeCompleted(projectId: Long, dayKey: String): Flow<Int> =
@@ -13,7 +20,27 @@ class StatsRepository(private val dao: DayStatDao) {
     suspend fun completedCount(projectId: Long, dayKey: String): Int =
         dao.get(projectId, dayKey)?.completedPomodoros ?: 0
 
-    /** Records one finished pomodoro toward the project's daily goal. */
-    suspend fun recordCompletedPomodoro(projectId: Long, dayKey: String) =
+    /** Records one finished pomodoro: daily goal counter + a detailed log entry for stats. */
+    suspend fun recordCompletedPomodoro(
+        projectId: Long,
+        dayKey: String,
+        startEpochMs: Long,
+        endEpochMs: Long,
+        durationSeconds: Int
+    ) {
         dao.addCompleted(projectId, dayKey, 1)
+        logDao.insert(
+            PomodoroLogEntity(
+                projectId = projectId,
+                startEpochMs = startEpochMs,
+                endEpochMs = endEpochMs,
+                durationSeconds = durationSeconds,
+                dayKey = dayKey
+            )
+        )
+    }
+
+    /** Full pomodoro history for the statistics screens. */
+    fun observeLog(): Flow<List<PomodoroLog>> =
+        logDao.observeAll().map { list -> list.map { it.toDomain() } }
 }

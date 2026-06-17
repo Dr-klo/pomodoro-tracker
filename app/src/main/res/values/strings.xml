@@ -17,6 +17,19 @@
     <string name="cd_settings">Settings</string>
     <string name="cd_play_pause">Play or pause</string>
 
+    <!-- Reports -->
+    <string name="title_reports">Reports</string>
+    <string name="cd_reports">Reports</string>
+    <string name="tab_tomatoes">Tomatoes</string>
+    <string name="tab_projects">Projects</string>
+    <string name="stat_total">Total</string>
+    <string name="stat_today">Today</string>
+    <string name="stat_week">Week</string>
+    <string name="stat_focus_time">Focus time</string>
+    <string name="stat_pomodoros">Pomodoros</string>
+    <string name="unit_hours">h</string>
+    <string name="unit_minutes">m</string>
+
     <!-- Settings -->
     <string name="title_settings">Settings</string>
     <string name="section_projects">Projects</string>

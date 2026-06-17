@@ -17,6 +17,19 @@
     <string name="cd_settings">Настройки</string>
     <string name="cd_play_pause">Старт или пауза</string>
 
+    <!-- Reports -->
+    <string name="title_reports">Отчёты</string>
+    <string name="cd_reports">Отчёты</string>
+    <string name="tab_tomatoes">Томаты</string>
+    <string name="tab_projects">Проекты</string>
+    <string name="stat_total">Всего</string>
+    <string name="stat_today">Сегодня</string>
+    <string name="stat_week">Неделя</string>
+    <string name="stat_focus_time">Время фокуса</string>
+    <string name="stat_pomodoros">Помидорки</string>
+    <string name="unit_hours">ч</string>
+    <string name="unit_minutes">м</string>
+
     <!-- Settings -->
     <string name="title_settings">Настройки</string>
     <string name="section_projects">Проекты</string>

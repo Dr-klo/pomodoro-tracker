@@ -18,6 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.drklo.pomodoro.data.repository.SettingsRepository
 import com.drklo.pomodoro.ui.main.MainScreen
+import com.drklo.pomodoro.ui.reports.ReportsScreen
 import com.drklo.pomodoro.ui.settings.ProjectEditScreen
 import com.drklo.pomodoro.ui.settings.SettingsScreen
 import com.drklo.pomodoro.ui.theme.PomodoroTheme
@@ -59,6 +60,7 @@ class MainActivity : ComponentActivity() {
 private object Routes {
     const val MAIN = "main"
     const val SETTINGS = "settings"
+    const val REPORTS = "reports"
     const val PROJECT_EDIT = "project/{projectId}"
     fun projectEdit(id: Long) = "project/$id"
 }
@@ -68,7 +70,13 @@ private fun AppNavHost(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = Routes.MAIN, modifier = modifier) {
         composable(Routes.MAIN) {
-            MainScreen(onOpenSettings = { navController.navigate(Routes.SETTINGS) })
+            MainScreen(
+                onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+                onOpenReports = { navController.navigate(Routes.REPORTS) }
+            )
+        }
+        composable(Routes.REPORTS) {
+            ReportsScreen(onBack = { navController.popBackStack() })
         }
         composable(Routes.SETTINGS) {
             SettingsScreen(

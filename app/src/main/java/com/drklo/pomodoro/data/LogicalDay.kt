@@ -18,11 +18,16 @@ object LogicalDay {
         now: LocalDateTime = LocalDateTime.now(),
         dayEndHour: Int,
         dayEndMinute: Int
-    ): String {
+    ): String = dateFor(now, dayEndHour, dayEndMinute).toString() // ISO-8601 yyyy-MM-dd
+
+    /** The logical date for [now], honoring the end-of-day boundary. */
+    fun dateFor(
+        now: LocalDateTime = LocalDateTime.now(),
+        dayEndHour: Int,
+        dayEndMinute: Int
+    ): LocalDate {
         val boundary = LocalTime.of(dayEndHour.coerceIn(0, 23), dayEndMinute.coerceIn(0, 59))
-        val date: LocalDate =
-            if (now.toLocalTime().isBefore(boundary)) now.toLocalDate().minusDays(1)
-            else now.toLocalDate()
-        return date.toString() // ISO-8601 yyyy-MM-dd
+        return if (now.toLocalTime().isBefore(boundary)) now.toLocalDate().minusDays(1)
+        else now.toLocalDate()
     }
 }

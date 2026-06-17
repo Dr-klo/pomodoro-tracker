@@ -178,7 +178,7 @@ class TimerEngine(
         _events.tryEmit(TimerEvent.PhaseFinished(finishedPhase))
 
         val next: TimerState = if (finishedPhase == Phase.POMODORO) {
-            persistCompletedPomodoro(project)
+            persistCompletedPomodoro(project, durationSeconds = s.totalSeconds)
             val newToday = s.completedToday + 1
             val perSession = project.pomodorosPerSession.coerceAtLeast(1)
             val newSession = (s.completedInSession % perSession) + 1
@@ -291,9 +291,13 @@ class TimerEngine(
     private fun currentDayKey(): String =
         LogicalDay.keyFor(dayEndHour = settings.dayEndHour, dayEndMinute = settings.dayEndMinute)
 
-    private fun persistCompletedPomodoro(project: Project) {
+    private fun persistCompletedPomodoro(project: Project, durationSeconds: Int) {
         val dayKey = currentDayKey()
-        scope.launch { statsRepository.recordCompletedPomodoro(project.id, dayKey) }
+        val end = System.currentTimeMillis()
+        val start = end - durationSeconds * 1000L
+        scope.launch {
+            statsRepository.recordCompletedPomodoro(project.id, dayKey, start, end, durationSeconds)
+        }
     }
 
     private fun refreshCompletedToday(project: Project) {

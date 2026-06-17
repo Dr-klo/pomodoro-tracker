@@ -16,4 +16,40 @@
     <string name="action_reset">Сброс</string>
     <string name="cd_settings">Настройки</string>
     <string name="cd_play_pause">Старт или пауза</string>
+
+    <!-- Settings -->
+    <string name="title_settings">Настройки</string>
+    <string name="section_projects">Проекты</string>
+    <string name="section_general">Общие</string>
+    <string name="action_add_project">Добавить проект</string>
+    <string name="cd_back">Назад</string>
+    <string name="cd_delete">Удалить</string>
+
+    <string name="setting_sound">Звуки</string>
+    <string name="setting_vibrate">Вибрация</string>
+    <string name="setting_always_on">Не гасить экран</string>
+    <string name="setting_autostart">Автозапуск следующего интервала</string>
+    <string name="setting_idle_alert">Алерт при простое</string>
+    <string name="setting_idle_alert_summary">Менять цвета экрана каждые N мин при простое (только при включённом экране)</string>
+    <string name="setting_day_end">Конец дня</string>
+    <string name="setting_day_end_summary">Когда начинается новый день для целей</string>
+    <string name="setting_language">Язык</string>
+    <string name="value_off">Выкл</string>
+    <string name="minutes_unit">мин</string>
+
+    <!-- Project editor -->
+    <string name="title_new_project">Новый проект</string>
+    <string name="title_edit_project">Редактирование проекта</string>
+    <string name="label_name">Название</string>
+    <string name="label_presets">Пресеты</string>
+    <string name="label_focus">Фокус</string>
+    <string name="label_short_break">Короткая пауза</string>
+    <string name="label_pomodoros">Помидорок в сессии</string>
+    <string name="label_daily_goal">Дневная цель</string>
+    <string name="label_pomodoro_color">Цвет помодоро</string>
+    <string name="label_break_color">Цвет паузы</string>
+    <string name="label_long_break">Длинная пауза</string>
+    <string name="label_long_break_minutes">Длительность длинной паузы</string>
+    <string name="label_long_break_interval">После N помидорок</string>
+    <string name="action_save">Сохранить</string>
 </resources>

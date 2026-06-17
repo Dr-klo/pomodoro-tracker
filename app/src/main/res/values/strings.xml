@@ -44,6 +44,13 @@
     <string name="chart_total">Total: %1$s</string>
     <string name="chart_no_data">No data for this period</string>
     <string name="chart_goals_calendar">Daily goals</string>
+    <string name="compare_more">%1$s more than %2$s</string>
+    <string name="compare_less">%1$s less than %2$s</string>
+    <string name="compare_same">same as %1$s</string>
+    <string name="prev_day">yesterday</string>
+    <string name="prev_week">last week</string>
+    <string name="prev_month">last month</string>
+    <string name="prev_period">previous period</string>
 
     <!-- Settings -->
     <string name="title_settings">Settings</string>

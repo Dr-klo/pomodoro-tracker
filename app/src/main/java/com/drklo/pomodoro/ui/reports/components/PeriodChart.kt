@@ -37,16 +37,24 @@ fun PeriodChart(
     val buckets = remember(aggregation, page, today) { bucketsFor(aggregation, today, page, locale) }
     val bars = remember(logs, buckets, projects) { buildStackedBars(logs, buckets, projects, valueOf) }
 
+    val prevBuckets = remember(aggregation, page, today) { bucketsFor(aggregation, today, page + 1, locale) }
+    val prevBars = remember(logs, prevBuckets, projects) { buildStackedBars(logs, prevBuckets, projects, valueOf) }
+
     val average = if (bars.isNotEmpty()) bars.sumOf { it.total.toDouble() } / bars.size else 0.0
     val maxTotal = bars.maxOfOrNull { it.total } ?: 0f
+    val currentTotal = bars.sumOf { it.total.toDouble() }.toFloat()
+    val prevTotal = prevBars.sumOf { it.total.toDouble() }.toFloat()
+
+    val avgMax = stringResource(
+        R.string.chart_avg_max,
+        summaryFormatter(average.toFloat()),
+        summaryFormatter(maxTotal)
+    )
+    val compare = comparisonLine(currentTotal, prevTotal, stringResource(R.string.prev_period), summaryFormatter)
 
     ChartCard(
         title = title,
-        subtitle = stringResource(
-            R.string.chart_avg_max,
-            summaryFormatter(average.toFloat()),
-            summaryFormatter(maxTotal)
-        )
+        subtitle = if (compare.isEmpty()) avgMax else "$avgMax\n$compare"
     ) {
         AggregationBar(
             aggregation = aggregation,

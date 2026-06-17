@@ -44,6 +44,13 @@
     <string name="chart_total">Всего: %1$s</string>
     <string name="chart_no_data">Нет данных за период</string>
     <string name="chart_goals_calendar">Дневные цели</string>
+    <string name="compare_more">на %1$s больше, чем %2$s</string>
+    <string name="compare_less">на %1$s меньше, чем %2$s</string>
+    <string name="compare_same">столько же, что и %1$s</string>
+    <string name="prev_day">вчера</string>
+    <string name="prev_week">на прошлой неделе</string>
+    <string name="prev_month">в прошлом месяце</string>
+    <string name="prev_period">прошлый период</string>
 
     <!-- Settings -->
     <string name="title_settings">Настройки</string>

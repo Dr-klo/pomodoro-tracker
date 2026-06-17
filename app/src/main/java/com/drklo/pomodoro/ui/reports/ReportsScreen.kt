@@ -126,6 +126,7 @@ fun ReportsScreen(
                             projects = projects,
                             today = today,
                             valueOf = { it.durationSeconds.toFloat() },
+                            formatValue = { formatFocus(it.toInt(), hLabel, mLabel) },
                             subtitle = { vals ->
                                 stringResource(
                                     R.string.chart_total,
@@ -145,6 +146,7 @@ fun ReportsScreen(
                             projects = projects,
                             today = today,
                             valueOf = { it.durationSeconds.toFloat() },
+                            formatValue = { formatFocus(it.toInt(), hLabel, mLabel) },
                             subtitle = { vals ->
                                 stringResource(
                                     R.string.chart_total,

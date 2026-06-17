@@ -37,6 +37,7 @@ import com.drklo.pomodoro.R
 import com.drklo.pomodoro.ui.reports.components.ChartCard
 import com.drklo.pomodoro.ui.reports.components.DonutChart
 import com.drklo.pomodoro.ui.reports.components.PeriodChart
+import com.drklo.pomodoro.ui.reports.components.ProjectBars
 import com.drklo.pomodoro.ui.reports.components.WeekJournal
 import com.drklo.pomodoro.ui.reports.components.WindowChart
 import kotlin.math.roundToInt
@@ -114,6 +115,25 @@ fun ReportsScreen(
                             stat(stringResource(R.string.stat_today), summary.todayPomodoros.toString()),
                             stat(stringResource(R.string.stat_week), summary.weekPomodoros.toString())
                         )
+                        WindowChart(
+                            title = stringResource(R.string.chart_time_by_project),
+                            logs = logs,
+                            projects = projects,
+                            today = today,
+                            valueOf = { it.durationSeconds.toFloat() },
+                            subtitle = { vals ->
+                                stringResource(
+                                    R.string.chart_total,
+                                    formatFocus(vals.sumOf { it.value.toDouble() }.toInt(), hLabel, mLabel)
+                                )
+                            }
+                        ) { vals ->
+                            ProjectBars(
+                                values = vals,
+                                valueFormatter = { formatFocus(it.toInt(), hLabel, mLabel) }
+                            )
+                        }
+
                         WindowChart(
                             title = stringResource(R.string.chart_time_distribution),
                             logs = logs,

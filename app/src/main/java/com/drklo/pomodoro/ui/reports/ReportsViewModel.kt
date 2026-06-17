@@ -11,7 +11,9 @@ import com.drklo.pomodoro.data.model.Project
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 /** Aggregated totals shown in the header rows of both report tabs. */
@@ -36,6 +38,16 @@ class ReportsViewModel(app: Application) : AndroidViewModel(app) {
 
     private val settings: StateFlow<GlobalSettings> = container.settingsRepository.settings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GlobalSettings())
+
+    /** Logical "today" date, honoring the end-of-day boundary. */
+    val today: StateFlow<LocalDate> = settings
+        .map { LogicalDay.dateFor(LocalDateTime.now(), it.dayEndHour, it.dayEndMinute) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LocalDate.now())
+
+    /** Project id -> pomodoro color (ARGB), for coloring chart segments. */
+    val projectColors: StateFlow<Map<Long, Int>> = projects
+        .map { list -> list.associate { it.id to it.pomodoroColor } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     val summary: StateFlow<ReportsSummary> =
         combine(logs, settings) { log, s ->

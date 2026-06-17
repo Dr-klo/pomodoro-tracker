@@ -29,6 +29,8 @@
     <string name="stat_pomodoros">Помидорки</string>
     <string name="unit_hours">ч</string>
     <string name="unit_minutes">м</string>
+    <string name="chart_week_journal">Журнал недели</string>
+    <string name="chart_week_journal_sub">За неделю: %1$s</string>
 
     <!-- Settings -->
     <string name="title_settings">Настройки</string>

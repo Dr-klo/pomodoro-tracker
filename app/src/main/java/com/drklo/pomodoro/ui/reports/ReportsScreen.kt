@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.drklo.pomodoro.R
+import com.drklo.pomodoro.ui.reports.components.ChartCard
+import com.drklo.pomodoro.ui.reports.components.WeekJournal
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,6 +43,9 @@ fun ReportsScreen(
     viewModel: ReportsViewModel = viewModel()
 ) {
     val summary by viewModel.summary.collectAsStateWithLifecycle()
+    val logs by viewModel.logs.collectAsStateWithLifecycle()
+    val today by viewModel.today.collectAsStateWithLifecycle()
+    val projectColors by viewModel.projectColors.collectAsStateWithLifecycle()
     var tab by remember { mutableIntStateOf(0) }
 
     Scaffold(
@@ -77,6 +82,15 @@ fun ReportsScreen(
                             stat(stringResource(R.string.stat_today), formatFocus(summary.todayFocusSec, hLabel, mLabel)),
                             stat(stringResource(R.string.stat_week), formatFocus(summary.weekFocusSec, hLabel, mLabel))
                         )
+                        ChartCard(
+                            title = stringResource(R.string.chart_week_journal),
+                            subtitle = stringResource(
+                                R.string.chart_week_journal_sub,
+                                formatFocus(summary.weekFocusSec, hLabel, mLabel)
+                            )
+                        ) {
+                            WeekJournal(logs = logs, today = today, projectColors = projectColors)
+                        }
                     }
                     else -> {
                         SummaryRow(

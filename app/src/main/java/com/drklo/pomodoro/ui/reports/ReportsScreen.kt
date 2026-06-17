@@ -22,6 +22,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -34,6 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.drklo.pomodoro.R
 import com.drklo.pomodoro.ui.reports.components.ChartCard
+import com.drklo.pomodoro.ui.reports.components.PeriodChart
 import com.drklo.pomodoro.ui.reports.components.WeekJournal
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,6 +47,7 @@ fun ReportsScreen(
     val summary by viewModel.summary.collectAsStateWithLifecycle()
     val logs by viewModel.logs.collectAsStateWithLifecycle()
     val today by viewModel.today.collectAsStateWithLifecycle()
+    val projects by viewModel.projects.collectAsStateWithLifecycle()
     val projectColors by viewModel.projectColors.collectAsStateWithLifecycle()
     var tab by remember { mutableIntStateOf(0) }
 
@@ -91,6 +94,15 @@ fun ReportsScreen(
                         ) {
                             WeekJournal(logs = logs, today = today, projectColors = projectColors)
                         }
+
+                        PeriodChart(
+                            title = stringResource(R.string.chart_focus_over_time),
+                            logs = logs,
+                            projects = projects,
+                            today = today,
+                            valueOf = { it.durationSeconds.toFloat() },
+                            summaryFormatter = { formatFocus(it.toInt(), hLabel, mLabel) }
+                        )
                     }
                     else -> {
                         SummaryRow(

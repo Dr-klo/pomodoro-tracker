@@ -31,6 +31,14 @@
     <string name="unit_minutes">м</string>
     <string name="chart_week_journal">Журнал недели</string>
     <string name="chart_week_journal_sub">За неделю: %1$s</string>
+    <string name="agg_day">День</string>
+    <string name="agg_week">Неделя</string>
+    <string name="agg_month">Месяц</string>
+    <string name="cd_prev">Назад</string>
+    <string name="cd_next">Вперёд</string>
+    <string name="chart_avg_max">сред. %1$s · макс %2$s</string>
+    <string name="chart_focus_over_time">Время фокуса по периодам</string>
+    <string name="chart_pomodoros_over_time">Помидорки по периодам</string>
 
     <!-- Settings -->
     <string name="title_settings">Настройки</string>

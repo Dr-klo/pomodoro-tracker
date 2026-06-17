@@ -31,6 +31,14 @@
     <string name="unit_minutes">m</string>
     <string name="chart_week_journal">Week journal</string>
     <string name="chart_week_journal_sub">This week: %1$s</string>
+    <string name="agg_day">Day</string>
+    <string name="agg_week">Week</string>
+    <string name="agg_month">Month</string>
+    <string name="cd_prev">Previous</string>
+    <string name="cd_next">Next</string>
+    <string name="chart_avg_max">avg %1$s · max %2$s</string>
+    <string name="chart_focus_over_time">Focus time over time</string>
+    <string name="chart_pomodoros_over_time">Pomodoros over time</string>
 
     <!-- Settings -->
     <string name="title_settings">Settings</string>

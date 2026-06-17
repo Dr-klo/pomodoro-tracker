@@ -73,6 +73,24 @@ class TimerEngine(
         refreshCompletedToday(project)
     }
 
+    /**
+     * Re-applies edited data for the currently active project (e.g. changed durations/colors)
+     * without resetting session progress. Adopts a new duration only when idle; a paused interval
+     * keeps its remaining time.
+     */
+    fun refreshActiveProject(updated: Project) {
+        val s = _state.value
+        if (s.project?.id != updated.id) return
+        when (s.status) {
+            TimerStatus.RUNNING, TimerStatus.PAUSED ->
+                _state.update { it.copy(project = updated) }
+            TimerStatus.IDLE -> {
+                val total = updated.durationSecondsFor(s.phase)
+                _state.update { it.copy(project = updated, totalSeconds = total, remainingSeconds = total) }
+            }
+        }
+    }
+
     fun togglePlayPause() {
         when (_state.value.status) {
             TimerStatus.IDLE -> start(userInitiated = true)

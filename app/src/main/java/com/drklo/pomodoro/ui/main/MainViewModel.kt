@@ -36,11 +36,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val fanfareTrigger: StateFlow<Int> = _fanfareTrigger.asStateFlow()
 
     init {
-        // Ensure an active project is selected once projects are available.
+        // Keep the engine's active project in sync with the database: select a default on first
+        // run, and re-apply edits (durations/colors) to the active project as they are saved.
         viewModelScope.launch {
             projects.collect { list ->
-                if (list.isNotEmpty() && engine.state.value.project == null) {
+                if (list.isEmpty()) return@collect
+                val active = engine.state.value.project
+                if (active == null) {
                     engine.setActiveProject(list.first())
+                } else {
+                    list.firstOrNull { it.id == active.id }?.let { engine.refreshActiveProject(it) }
                 }
             }
         }

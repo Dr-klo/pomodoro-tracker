@@ -1,5 +1,6 @@
 package com.drklo.pomodoro.ui.main
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,8 +11,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -19,7 +22,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,10 +44,11 @@ import com.drklo.pomodoro.data.model.TimerStatus
 import com.drklo.pomodoro.timer.TimerState
 import com.drklo.pomodoro.timer.formatMmSs
 import com.drklo.pomodoro.ui.main.components.Fanfare
-import com.drklo.pomodoro.ui.main.components.PhaseLabel
 import com.drklo.pomodoro.ui.main.components.SessionBullets
 import com.drklo.pomodoro.ui.main.components.TimerDial
 import com.drklo.pomodoro.ui.theme.DefaultPomodoroColor
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable
 fun MainScreen(
@@ -70,9 +73,13 @@ fun MainScreen(
 
     val pagerState = rememberPagerState(initialPage = viewModel.indexOfActiveProject()) { projects.size }
 
-    // Apply carousel selection once a page settles (F-008).
-    LaunchedEffect(pagerState.settledPage, projects.size) {
-        viewModel.onSelectProject(pagerState.settledPage)
+    // React only to genuine user-driven page settles (drop the initial value so returning from
+    // another screen does not reset a paused timer) — F-008, fix for settings round-trip.
+    LaunchedEffect(pagerState) {
+        androidx.compose.runtime.snapshotFlow { pagerState.settledPage }
+            .drop(1)
+            .distinctUntilChanged()
+            .collect { page -> viewModel.onSelectProject(page) }
     }
 
     val isLandscape =
@@ -90,7 +97,6 @@ fun MainScreen(
                 project = project,
                 state = state,
                 isActive = isActive,
-                isRunning = isRunning,
                 isLandscape = isLandscape,
                 onTap = { if (isActive) viewModel.onPlayPause() },
                 onReset = viewModel::onReset,
@@ -104,9 +110,14 @@ fun MainScreen(
                 onClick = onOpenSettings,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
+                    .statusBarsPadding()
                     .padding(8.dp)
             ) {
-                Icon(Icons.Filled.Menu, contentDescription = stringResource(R.string.cd_settings))
+                Icon(
+                    Icons.Filled.Menu,
+                    contentDescription = stringResource(R.string.cd_settings),
+                    tint = Color.White
+                )
             }
         }
 
@@ -119,7 +130,6 @@ private fun ProjectPage(
     project: Project,
     state: TimerState,
     isActive: Boolean,
-    isRunning: Boolean,
     isLandscape: Boolean,
     onTap: () -> Unit,
     onReset: () -> Unit,
@@ -128,14 +138,18 @@ private fun ProjectPage(
     // The page reflects live state only for the active project; others show an idle preview.
     val phase = if (isActive) state.phase else Phase.POMODORO
     val status = if (isActive) state.status else TimerStatus.IDLE
-    val progress = if (isActive) state.progress else 0f
+    val fraction =
+        if (isActive && state.totalSeconds > 0) state.remainingSeconds.toFloat() / state.totalSeconds
+        else 1f
     val filledBullets = if (isActive) state.completedInSession else 0
 
+    // Phase color is the BACKGROUND; foreground stays white (#3). Idle alert flips the color (#6).
     val flip = isActive && state.awaitingNext && state.idleAlertActive
-    val accent: Color = when {
+    val bgColor: Color = when {
         flip -> Color(if (phase == Phase.POMODORO) project.breakColor else project.pomodoroColor)
         else -> Color(project.colorFor(phase))
     }.takeIf { it.alpha > 0f } ?: DefaultPomodoroColor
+    val fg = Color.White
 
     val phaseName = stringResource(
         when (phase) {
@@ -145,18 +159,18 @@ private fun ProjectPage(
         }
     )
     val minutes = project.durationSecondsFor(phase) / 60
-    val labelText = if (isActive && status != TimerStatus.IDLE) {
+    val timeText = if (isActive && status != TimerStatus.IDLE) {
         formatMmSs(state.remainingSeconds)
     } else {
-        stringResource(R.string.phase_label_format, phaseName, minutes, stringResource(R.string.minutes_short))
+        "$minutes ${stringResource(R.string.minutes_short)}"
     }
     val canChangePhase = isActive && status != TimerStatus.RUNNING
     val showReset = isActive && status == TimerStatus.PAUSED
 
     val dial = @Composable { dialModifier: Modifier ->
         TimerDial(
-            progress = progress,
-            accentColor = accent,
+            fraction = fraction,
+            color = fg,
             status = status,
             onTap = onTap,
             onLongHoldComplete = onReset,
@@ -165,27 +179,26 @@ private fun ProjectPage(
     }
 
     val details = @Composable {
-        SessionBullets(filled = filledBullets, total = project.pomodorosPerSession, color = accent)
+        SessionBullets(filled = filledBullets, total = project.pomodorosPerSession, color = fg)
         Spacer(Modifier.height(12.dp))
+        Text(text = project.name, fontSize = 22.sp, fontWeight = FontWeight.Medium, color = fg)
+        Spacer(Modifier.height(6.dp))
+        // Phase type — always visible so the user knows pomodoro vs break (#7); tap to change (F-021).
         Text(
-            text = project.name,
-            fontSize = 22.sp,
+            text = phaseName,
+            fontSize = 18.sp,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onBackground
+            color = fg.copy(alpha = 0.9f),
+            modifier = if (canChangePhase) Modifier.clickable { onChangePhase() } else Modifier
         )
-        Spacer(Modifier.height(8.dp))
-        PhaseLabel(
-            text = labelText,
-            color = accent,
-            changeEnabled = canChangePhase,
-            onChangePhase = onChangePhase
-        )
+        Spacer(Modifier.height(2.dp))
+        Text(text = timeText, fontSize = 40.sp, fontWeight = FontWeight.SemiBold, color = fg)
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().background(bgColor)) {
         if (isLandscape) {
             Row(
-                modifier = Modifier.fillMaxSize().padding(24.dp),
+                modifier = Modifier.fillMaxSize().systemBarsPadding().padding(24.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(24.dp)
             ) {
@@ -198,7 +211,7 @@ private fun ProjectPage(
             }
         } else {
             Column(
-                modifier = Modifier.fillMaxSize().padding(24.dp),
+                modifier = Modifier.fillMaxSize().systemBarsPadding().padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -212,10 +225,11 @@ private fun ProjectPage(
         if (showReset) {
             Text(
                 text = stringResource(R.string.action_reset),
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                color = fg.copy(alpha = 0.7f),
                 fontSize = 14.sp,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
                     .padding(bottom = 24.dp)
                     .clickable { onReset() }
             )

@@ -90,6 +90,7 @@ fun ProjectEditScreen(
         }
     ) { padding ->
         val p = project ?: return@Scaffold
+        val minUnit = stringResource(R.string.minutes_unit)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -121,14 +122,14 @@ fun ProjectEditScreen(
                 value = p.focusMinutes,
                 onValueChange = { v -> viewModel.edit { it.copy(focusMinutes = v) } },
                 min = 1, max = 180,
-                valueText = { "$it ${stringResource(R.string.minutes_unit)}" }
+                valueText = { "$it $minUnit" }
             )
             Stepper(
                 label = stringResource(R.string.label_short_break),
                 value = p.shortBreakMinutes,
                 onValueChange = { v -> viewModel.edit { it.copy(shortBreakMinutes = v) } },
                 min = 1, max = 120,
-                valueText = { "$it ${stringResource(R.string.minutes_unit)}" }
+                valueText = { "$it $minUnit" }
             )
             Stepper(
                 label = stringResource(R.string.label_pomodoros),
@@ -165,7 +166,7 @@ fun ProjectEditScreen(
                     value = p.longBreakMinutes,
                     onValueChange = { v -> viewModel.edit { it.copy(longBreakMinutes = v) } },
                     min = 1, max = 120,
-                    valueText = { "$it ${stringResource(R.string.minutes_unit)}" }
+                    valueText = { "$it $minUnit" }
                 )
                 Stepper(
                     label = stringResource(R.string.label_long_break_interval),

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base application theme. The Compose UI provides the actual colors at runtime;
+         this theme mainly drives the splash window and pre-Compose system bars. -->
+    <style name="Theme.Pomodoro" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>

@@ -303,7 +303,15 @@ class TimerEngine(
     private fun refreshCompletedToday(project: Project) {
         scope.launch {
             val today = statsRepository.completedCount(project.id, currentDayKey())
-            _state.update { if (it.project?.id == project.id) it.copy(completedToday = today) else it }
+            // Restore session bullets from today's completed count so progress survives a restart
+            // (PRD: restore the count of completed pomodoros).
+            val perSession = project.pomodorosPerSession.coerceAtLeast(1)
+            val sessionBullets = if (today <= 0) 0 else ((today - 1) % perSession) + 1
+            _state.update {
+                if (it.project?.id == project.id)
+                    it.copy(completedToday = today, completedInSession = sessionBullets)
+                else it
+            }
         }
     }
 

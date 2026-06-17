@@ -29,6 +29,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +43,7 @@ import com.drklo.pomodoro.R
 import com.drklo.pomodoro.data.model.AppLanguage
 import com.drklo.pomodoro.data.model.Project
 import com.drklo.pomodoro.ui.common.Stepper
+import com.drklo.pomodoro.util.BatteryOptimization
 import com.drklo.pomodoro.util.findActivity
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,6 +57,13 @@ fun SettingsScreen(
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val projects by viewModel.projects.collectAsStateWithLifecycle()
     val context = androidx.compose.ui.platform.LocalContext.current
+
+    var batteryExempt by androidx.compose.runtime.remember {
+        androidx.compose.runtime.mutableStateOf(BatteryOptimization.isIgnoring(context))
+    }
+    val batteryLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { batteryExempt = BatteryOptimization.isIgnoring(context) }
 
     Scaffold(
         topBar = {
@@ -146,6 +155,36 @@ fun SettingsScreen(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+
+            item { HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp)) }
+
+            // --- Background reliability (battery optimization, Samsung) ---
+            item { SectionHeader(stringResource(R.string.section_background)) }
+            item {
+                if (batteryExempt) {
+                    Text(
+                        stringResource(R.string.battery_ok),
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                runCatching { batteryLauncher.launch(BatteryOptimization.requestIntent(context)) }
+                                    .onFailure { batteryLauncher.launch(BatteryOptimization.settingsListIntent()) }
+                            }
+                            .padding(vertical = 8.dp)
+                    ) {
+                        Text(stringResource(R.string.battery_action))
+                        Text(
+                            stringResource(R.string.battery_summary),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
 
             item { HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp)) }

@@ -34,6 +34,11 @@
     <string name="setting_idle_alert_summary">Менять цвета экрана каждые N мин при простое (только при включённом экране)</string>
     <string name="setting_day_end">Конец дня</string>
     <string name="setting_day_end_summary">Когда начинается новый день для целей</string>
+    <string name="section_background">Работа в фоне</string>
+    <string name="battery_action">Отключить экономию батареи</string>
+    <string name="battery_summary">Samsung может останавливать таймер в фоне. Разрешите неограниченную работу в фоне, чтобы длинные таймеры не прерывались.</string>
+    <string name="battery_ok">Экономия батареи отключена ✓</string>
+
     <string name="setting_language">Язык</string>
     <string name="value_off">Выкл</string>
     <string name="minutes_unit">мин</string>

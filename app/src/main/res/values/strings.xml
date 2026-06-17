@@ -34,6 +34,11 @@
     <string name="setting_idle_alert_summary">Flip screen colors every N min while idle (screen-on only)</string>
     <string name="setting_day_end">End of day</string>
     <string name="setting_day_end_summary">When a new day starts for goals</string>
+    <string name="section_background">Background reliability</string>
+    <string name="battery_action">Disable battery optimization</string>
+    <string name="battery_summary">Samsung may stop the timer in the background. Allow unrestricted background use to keep long timers running.</string>
+    <string name="battery_ok">Battery optimization is off ✓</string>
+
     <string name="setting_language">Language</string>
     <string name="value_off">Off</string>
     <string name="minutes_unit">min</string>

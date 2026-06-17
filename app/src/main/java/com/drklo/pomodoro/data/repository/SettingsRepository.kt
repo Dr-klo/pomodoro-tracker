@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.drklo.pomodoro.data.model.AppLanguage
 import com.drklo.pomodoro.data.model.GlobalSettings
+import com.drklo.pomodoro.data.model.ThemeMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -27,6 +28,7 @@ class SettingsRepository(private val context: Context) {
         val DAY_END_HOUR = intPreferencesKey("day_end_hour")
         val DAY_END_MINUTE = intPreferencesKey("day_end_minute")
         val LANGUAGE = stringPreferencesKey("language")
+        val THEME = stringPreferencesKey("theme_mode")
     }
 
     val settings: Flow<GlobalSettings> = context.dataStore.data.map { p ->
@@ -40,7 +42,8 @@ class SettingsRepository(private val context: Context) {
             idleAlertMinutes = p[Keys.IDLE_ALERT_MIN] ?: defaults.idleAlertMinutes,
             dayEndHour = p[Keys.DAY_END_HOUR] ?: defaults.dayEndHour,
             dayEndMinute = p[Keys.DAY_END_MINUTE] ?: defaults.dayEndMinute,
-            language = AppLanguage.fromTag(p[Keys.LANGUAGE])
+            language = AppLanguage.fromTag(p[Keys.LANGUAGE]),
+            themeMode = ThemeMode.fromName(p[Keys.THEME])
         )
     }
 
@@ -57,6 +60,7 @@ class SettingsRepository(private val context: Context) {
     }
 
     suspend fun setLanguage(language: AppLanguage) = edit { it[Keys.LANGUAGE] = language.tag }
+    suspend fun setThemeMode(mode: ThemeMode) = edit { it[Keys.THEME] = mode.name }
 
     private suspend fun edit(block: (androidx.datastore.preferences.core.MutablePreferences) -> Unit) {
         context.dataStore.edit(block)

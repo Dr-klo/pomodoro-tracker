@@ -77,6 +77,10 @@
     <string name="battery_summary">Samsung может останавливать таймер в фоне. Разрешите неограниченную работу в фоне, чтобы длинные таймеры не прерывались.</string>
     <string name="battery_ok">Экономия батареи отключена ✓</string>
 
+    <string name="section_appearance">Оформление</string>
+    <string name="theme_system">Система</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Тёмная</string>
     <string name="setting_language">Язык</string>
     <string name="value_off">Выкл</string>
     <string name="minutes_unit">мин</string>

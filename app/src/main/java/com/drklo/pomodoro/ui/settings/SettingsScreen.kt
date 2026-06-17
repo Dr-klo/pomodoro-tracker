@@ -42,6 +42,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.drklo.pomodoro.R
 import com.drklo.pomodoro.data.model.AppLanguage
 import com.drklo.pomodoro.data.model.Project
+import com.drklo.pomodoro.data.model.ThemeMode
 import com.drklo.pomodoro.ui.common.Stepper
 import com.drklo.pomodoro.util.BatteryOptimization
 import com.drklo.pomodoro.util.findActivity
@@ -182,6 +183,27 @@ fun SettingsScreen(
                             stringResource(R.string.battery_summary),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            item { HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp)) }
+
+            // --- Appearance ---
+            item { SectionHeader(stringResource(R.string.section_appearance)) }
+            item {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val modes = listOf(
+                        ThemeMode.SYSTEM to R.string.theme_system,
+                        ThemeMode.LIGHT to R.string.theme_light,
+                        ThemeMode.DARK to R.string.theme_dark
+                    )
+                    modes.forEach { (mode, labelRes) ->
+                        FilterChip(
+                            selected = settings.themeMode == mode,
+                            onClick = { viewModel.setThemeMode(mode) },
+                            label = { Text(stringResource(labelRes)) }
                         )
                     }
                 }

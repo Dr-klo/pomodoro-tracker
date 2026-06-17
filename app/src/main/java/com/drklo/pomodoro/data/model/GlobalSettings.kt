@@ -17,5 +17,6 @@ data class GlobalSettings(
     /** Time of day (local) at which a new logical day begins (F-022). Default = midnight. */
     val dayEndHour: Int = 0,
     val dayEndMinute: Int = 0,
-    val language: AppLanguage = AppLanguage.RUSSIAN
+    val language: AppLanguage = AppLanguage.RUSSIAN,
+    val themeMode: ThemeMode = ThemeMode.SYSTEM
 )

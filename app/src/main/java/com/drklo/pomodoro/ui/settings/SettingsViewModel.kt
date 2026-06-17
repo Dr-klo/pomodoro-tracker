@@ -7,6 +7,7 @@ import com.drklo.pomodoro.PomodoroApp
 import com.drklo.pomodoro.data.model.AppLanguage
 import com.drklo.pomodoro.data.model.GlobalSettings
 import com.drklo.pomodoro.data.model.Project
+import com.drklo.pomodoro.data.model.ThemeMode
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -32,6 +33,7 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
     fun setIdleAlertMinutes(value: Int) = viewModelScope.launch { settingsRepo.setIdleAlertMinutes(value) }
     fun setDayEnd(hour: Int, minute: Int) = viewModelScope.launch { settingsRepo.setDayEnd(hour, minute) }
     fun setLanguage(language: AppLanguage) = viewModelScope.launch { settingsRepo.setLanguage(language) }
+    fun setThemeMode(mode: ThemeMode) = viewModelScope.launch { settingsRepo.setThemeMode(mode) }
 
     fun deleteProject(project: Project) = viewModelScope.launch { projectRepo.delete(project) }
 }

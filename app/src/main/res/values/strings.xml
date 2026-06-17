@@ -77,6 +77,10 @@
     <string name="battery_summary">Samsung may stop the timer in the background. Allow unrestricted background use to keep long timers running.</string>
     <string name="battery_ok">Battery optimization is off ✓</string>
 
+    <string name="section_appearance">Appearance</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
     <string name="setting_language">Language</string>
     <string name="value_off">Off</string>
     <string name="minutes_unit">min</string>

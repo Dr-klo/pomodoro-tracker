@@ -36,6 +36,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.drklo.pomodoro.R
 import com.drklo.pomodoro.ui.reports.components.ChartCard
 import com.drklo.pomodoro.ui.reports.components.DonutChart
+import com.drklo.pomodoro.ui.reports.components.MonthCalendar
 import com.drklo.pomodoro.ui.reports.components.PeriodChart
 import com.drklo.pomodoro.ui.reports.components.ProjectBars
 import com.drklo.pomodoro.ui.reports.components.WeekJournal
@@ -97,6 +98,10 @@ fun ReportsScreen(
                             )
                         ) {
                             WeekJournal(logs = logs, today = today, projectColors = projectColors)
+                        }
+
+                        ChartCard(title = stringResource(R.string.chart_goals_calendar)) {
+                            MonthCalendar(logs = logs, projects = projects, today = today)
                         }
 
                         PeriodChart(

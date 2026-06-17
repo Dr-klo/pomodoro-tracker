@@ -43,6 +43,7 @@
     <string name="chart_time_by_project">Time per project</string>
     <string name="chart_total">Total: %1$s</string>
     <string name="chart_no_data">No data for this period</string>
+    <string name="chart_goals_calendar">Daily goals</string>
 
     <!-- Settings -->
     <string name="title_settings">Settings</string>

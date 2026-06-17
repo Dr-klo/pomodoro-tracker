@@ -54,9 +54,13 @@ class TimerEngine(
 
     // --- User actions ---------------------------------------------------------------------
 
-    /** Selects the active project and resets the session. Allowed only while IDLE (carousel F-008). */
+    /**
+     * Selects the active project and resets the session. Allowed while stopped or paused
+     * (carousel F-008); switching away from a paused interval discards it.
+     */
     fun setActiveProject(project: Project) {
-        if (_state.value.status != TimerStatus.IDLE) return
+        if (_state.value.status == TimerStatus.RUNNING) return
+        cancelTick()
         stopIdleAlert()
         val total = project.durationSecondsFor(Phase.POMODORO)
         _state.value = TimerState(

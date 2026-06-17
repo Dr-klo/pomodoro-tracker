@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Pomodoro</string>
+
+    <!-- Phases -->
+    <string name="phase_pomodoro">Pomodoro</string>
+    <string name="phase_short_break">Break</string>
+    <string name="phase_long_break">Long break</string>
+
+    <!-- Timer notification -->
+    <string name="timer_channel_name">Timer</string>
+    <string name="timer_channel_desc">Shows the running pomodoro timer</string>
 </resources>

@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Помодоро</string>
+
+    <!-- Phases -->
+    <string name="phase_pomodoro">Помодоро</string>
+    <string name="phase_short_break">Пауза</string>
+    <string name="phase_long_break">Длинная пауза</string>
+
+    <!-- Timer notification -->
+    <string name="timer_channel_name">Таймер</string>
+    <string name="timer_channel_desc">Показывает идущий таймер помодоро</string>
 </resources>

@@ -6,6 +6,8 @@ import com.drklo.pomodoro.data.db.AppDatabase
 import com.drklo.pomodoro.data.repository.ProjectRepository
 import com.drklo.pomodoro.data.repository.SettingsRepository
 import com.drklo.pomodoro.data.repository.StatsRepository
+import com.drklo.pomodoro.timer.TimerEffects
+import com.drklo.pomodoro.timer.TimerEngine
 
 /**
  * Manual dependency container (simple service locator). Held by [com.drklo.pomodoro.PomodoroApp]
@@ -22,4 +24,11 @@ class AppContainer(context: Context) {
     val projectRepository: ProjectRepository by lazy { ProjectRepository(database.projectDao()) }
     val statsRepository: StatsRepository by lazy { StatsRepository(database.dayStatDao()) }
     val settingsRepository: SettingsRepository by lazy { SettingsRepository(context.applicationContext) }
+
+    private val timerEffects: TimerEffects by lazy { TimerEffects(context.applicationContext) }
+
+    /** The single, app-wide timer instance (guarantees one active timer, F-003). */
+    val timerEngine: TimerEngine by lazy {
+        TimerEngine(settingsRepository, statsRepository, timerEffects)
+    }
 }

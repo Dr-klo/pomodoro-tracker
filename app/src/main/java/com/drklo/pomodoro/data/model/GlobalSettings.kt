@@ -1,0 +1,18 @@
+package com.drklo.pomodoro.data.model
+
+/**
+ * App-wide settings (PRD US-005, "Глобально"): sounds, vibration, always-on, idle alert,
+ * autostart, end-of-day time and UI language.
+ */
+data class GlobalSettings(
+    val soundEnabled: Boolean = true,
+    val vibrateEnabled: Boolean = true,
+    val alwaysOnDisplay: Boolean = false,
+    val autostart: Boolean = false,
+    /** Idle alert period in minutes; 0 disables the alert (F-012). */
+    val idleAlertMinutes: Int = 0,
+    /** Time of day (local) at which a new logical day begins (F-022). Default = midnight. */
+    val dayEndHour: Int = 0,
+    val dayEndMinute: Int = 0,
+    val language: AppLanguage = AppLanguage.RUSSIAN
+)

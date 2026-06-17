@@ -112,7 +112,7 @@ fun TimerDial(
                 radius = (size.minDimension - strokeWidth) / 2f,
                 style = Stroke(width = strokeWidth)
             )
-            // Remaining-time sector (empties as the countdown runs).
+            // Remaining-time sector (empties as the countdown runs). Flat caps for a sharp look.
             drawArc(
                 color = color,
                 startAngle = -90f,
@@ -120,9 +120,9 @@ fun TimerDial(
                 useCenter = false,
                 topLeft = topLeft,
                 size = arcSize,
-                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Butt)
             )
-            // Clock hand pointing at the tip of the remaining arc, only while counting down (#1).
+            // Thin clock hand pointing at the tip of the remaining arc, only while counting down (#1).
             if (showHand) {
                 val center = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height / 2f)
                 val handLength = (size.minDimension - strokeWidth) / 2f
@@ -135,10 +135,9 @@ fun TimerDial(
                     color = color,
                     start = center,
                     end = handEnd,
-                    strokeWidth = strokeWidth * 0.28f,
-                    cap = StrokeCap.Round
+                    strokeWidth = strokeWidth * 0.12f,
+                    cap = StrokeCap.Butt
                 )
-                drawCircle(color = color, radius = strokeWidth * 0.45f, center = center)
             }
             // Hold-to-reset indicator (thin outer ring filling while held).
             if (holdProgress.value > 0f) {
@@ -153,7 +152,7 @@ fun TimerDial(
                         size.width - outerStroke,
                         size.height - outerStroke
                     ),
-                    style = Stroke(width = outerStroke, cap = StrokeCap.Round)
+                    style = Stroke(width = outerStroke, cap = StrokeCap.Butt)
                 )
             }
         }

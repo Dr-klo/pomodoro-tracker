@@ -27,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -73,15 +74,24 @@ fun MainScreen(
     val isRunning = state.status == TimerStatus.RUNNING
     val canSwipe = state.status == TimerStatus.IDLE || state.status == TimerStatus.PAUSED
 
-    val pagerState = rememberPagerState(initialPage = viewModel.indexOfActiveProject()) { projects.size }
+    // Infinite carousel: a huge virtual page count starting in the middle; the real project index
+    // is page % size, so swiping past the ends wraps around instead of hitting a boundary.
+    val infinite = projects.size > 1
+    val pageCount = if (infinite) Int.MAX_VALUE else 1
+    val startPage = remember(projects.size) {
+        if (infinite) {
+            (Int.MAX_VALUE / 2) / projects.size * projects.size + viewModel.indexOfActiveProject()
+        } else 0
+    }
+    val pagerState = rememberPagerState(initialPage = startPage) { pageCount }
 
     // React only to genuine user-driven page settles (drop the initial value so returning from
     // another screen does not reset a paused timer) — F-008, fix for settings round-trip.
-    LaunchedEffect(pagerState) {
+    LaunchedEffect(pagerState, projects.size) {
         androidx.compose.runtime.snapshotFlow { pagerState.settledPage }
             .drop(1)
             .distinctUntilChanged()
-            .collect { page -> viewModel.onSelectProject(page) }
+            .collect { page -> viewModel.onSelectProject(page % projects.size) }
     }
 
     val isLandscape =
@@ -93,7 +103,7 @@ fun MainScreen(
             userScrollEnabled = canSwipe,
             modifier = Modifier.fillMaxSize()
         ) { page ->
-            val project = projects[page]
+            val project = projects[page % projects.size]
             val isActive = project.id == state.project?.id
             ProjectPage(
                 project = project,

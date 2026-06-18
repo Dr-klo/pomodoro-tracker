@@ -25,14 +25,19 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
@@ -52,9 +57,17 @@ import com.drklo.pomodoro.ui.main.components.PausedBookmark
 import com.drklo.pomodoro.ui.main.components.SessionBullets
 import com.drklo.pomodoro.ui.main.components.TimerDial
 import com.drklo.pomodoro.ui.theme.DefaultPomodoroColor
+import com.drklo.pomodoro.util.findActivity
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+
+/** Hide the system bars after this much inactivity on the main screen. */
+private const val IDLE_HIDE_MS = 3_000L
 
 @Composable
 fun MainScreen(
@@ -72,6 +85,29 @@ fun MainScreen(
     val keepOn = settings.alwaysOnDisplay && (state.status != TimerStatus.IDLE || state.awaitingNext)
     val view = LocalView.current
     LaunchedEffect(keepOn) { view.keepScreenOn = keepOn }
+
+    // Auto-hide system bars after inactivity so the Samsung nav buttons stop overlapping the
+    // top-right icons (especially in landscape). Any touch reveals them; edge-swipe shows transiently.
+    val window = view.context.findActivity()?.window
+    val insetsController = remember(window) {
+        window?.let { WindowCompat.getInsetsController(it, view) }?.apply {
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
+    }
+    var barsVisible by remember { mutableStateOf(true) }
+    var interactionTick by remember { mutableIntStateOf(0) }
+    LaunchedEffect(interactionTick) {
+        barsVisible = true
+        delay(IDLE_HIDE_MS)
+        barsVisible = false
+    }
+    LaunchedEffect(barsVisible, insetsController) {
+        val bars = WindowInsetsCompat.Type.systemBars()
+        if (barsVisible) insetsController?.show(bars) else insetsController?.hide(bars)
+    }
+    DisposableEffect(insetsController) {
+        onDispose { insetsController?.show(WindowInsetsCompat.Type.systemBars()) }
+    }
 
     if (projects.isEmpty()) return
 
@@ -108,7 +144,18 @@ fun MainScreen(
     var shakeTrigger by remember { androidx.compose.runtime.mutableIntStateOf(0) }
     val scope = rememberCoroutineScope()
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) {
+                        awaitPointerEvent(PointerEventPass.Initial)
+                        interactionTick++
+                    }
+                }
+            }
+    ) {
         HorizontalPager(
             state = pagerState,
             userScrollEnabled = canSwipe,

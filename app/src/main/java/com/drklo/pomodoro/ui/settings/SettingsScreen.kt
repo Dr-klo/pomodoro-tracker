@@ -1,23 +1,26 @@
 package com.drklo.pomodoro.ui.settings
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.background
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,11 +32,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -43,9 +49,11 @@ import com.drklo.pomodoro.R
 import com.drklo.pomodoro.data.model.AppLanguage
 import com.drklo.pomodoro.data.model.Project
 import com.drklo.pomodoro.data.model.ThemeMode
+import com.drklo.pomodoro.ui.common.SegmentedChoice
 import com.drklo.pomodoro.ui.common.Stepper
 import com.drklo.pomodoro.util.BatteryOptimization
 import com.drklo.pomodoro.util.findActivity
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,13 +65,11 @@ fun SettingsScreen(
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val projects by viewModel.projects.collectAsStateWithLifecycle()
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
 
-    var batteryExempt by androidx.compose.runtime.remember {
-        androidx.compose.runtime.mutableStateOf(BatteryOptimization.isIgnoring(context))
-    }
-    val batteryLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    var batteryExempt by remember { mutableStateOf(BatteryOptimization.isIgnoring(context)) }
+    val batteryLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
     ) { batteryExempt = BatteryOptimization.isIgnoring(context) }
 
     Scaffold(
@@ -79,154 +85,124 @@ fun SettingsScreen(
         }
     ) { padding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(padding),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp)
+            modifier = Modifier.fillMaxWidth().padding(padding),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // --- Projects ---
-            item { SectionHeader(stringResource(R.string.section_projects)) }
-            items(projects, key = { it.id }) { project ->
-                ProjectRow(
-                    project = project,
-                    onClick = { onEditProject(project.id) },
-                    onDelete = { viewModel.deleteProject(project) }
-                )
-            }
             item {
-                TextButton(onClick = onAddProject, modifier = Modifier.padding(top = 4.dp)) {
-                    Icon(Icons.Filled.Add, contentDescription = null)
-                    Text(stringResource(R.string.action_add_project), modifier = Modifier.padding(start = 8.dp))
+                SettingsGroup(stringResource(R.string.section_projects)) {
+                    projects.forEachIndexed { index, project ->
+                        if (index > 0) RowDivider()
+                        ProjectRow(
+                            project = project,
+                            onClick = { onEditProject(project.id) },
+                            onDelete = { viewModel.deleteProject(project) }
+                        )
+                    }
+                    RowDivider()
+                    TextButton(
+                        onClick = onAddProject,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    ) {
+                        Icon(Icons.Filled.Add, contentDescription = null)
+                        Text(
+                            stringResource(R.string.action_add_project),
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
                 }
             }
-
-            item { HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp)) }
 
             // --- General ---
-            item { SectionHeader(stringResource(R.string.section_general)) }
             item {
-                SwitchRow(stringResource(R.string.setting_sound), settings.soundEnabled, viewModel::setSound)
-            }
-            item {
-                SwitchRow(stringResource(R.string.setting_vibrate), settings.vibrateEnabled, viewModel::setVibrate)
-            }
-            item {
-                SwitchRow(stringResource(R.string.setting_always_on), settings.alwaysOnDisplay, viewModel::setAlwaysOn)
-            }
-            item {
-                SwitchRow(stringResource(R.string.setting_autostart_pomodoros), settings.autostartPomodoros, viewModel::setAutostartPomodoros)
-            }
-            item {
-                SwitchRow(stringResource(R.string.setting_autostart_breaks), settings.autostartBreaks, viewModel::setAutostartBreaks)
-            }
-            item {
-                Stepper(
-                    label = stringResource(R.string.setting_idle_alert),
-                    value = settings.idleAlertMinutes,
-                    onValueChange = viewModel::setIdleAlertMinutes,
-                    min = 0, max = 120,
-                    valueText = { v ->
-                        if (v == 0) context.getString(R.string.value_off)
-                        else "$v ${context.getString(R.string.minutes_unit)}"
-                    }
-                )
-            }
-            item {
-                Text(
-                    stringResource(R.string.setting_idle_alert_summary),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            item {
-                Stepper(
-                    label = stringResource(R.string.setting_day_end),
-                    modifier = Modifier.padding(top = 12.dp),
-                    value = settings.dayEndHour * 60 + settings.dayEndMinute,
-                    onValueChange = { total -> viewModel.setDayEnd(total / 60, total % 60) },
-                    min = 0, max = 23 * 60 + 55, step = 5,
-                    valueText = { total ->
-                        String.format(java.util.Locale.US, "%02d:%02d", total / 60, total % 60)
-                    }
-                )
-            }
-            item {
-                Text(
-                    stringResource(R.string.setting_day_end_summary),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            item { HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp)) }
-
-            // --- Background reliability (battery optimization, Samsung) ---
-            item { SectionHeader(stringResource(R.string.section_background)) }
-            item {
-                if (batteryExempt) {
-                    Text(
-                        stringResource(R.string.battery_ok),
-                        modifier = Modifier.padding(vertical = 8.dp)
+                SettingsGroup(stringResource(R.string.section_general)) {
+                    SwitchRow(stringResource(R.string.setting_sound), settings.soundEnabled, viewModel::setSound)
+                    SwitchRow(stringResource(R.string.setting_vibrate), settings.vibrateEnabled, viewModel::setVibrate)
+                    SwitchRow(stringResource(R.string.setting_always_on), settings.alwaysOnDisplay, viewModel::setAlwaysOn)
+                    SwitchRow(stringResource(R.string.setting_autostart_pomodoros), settings.autostartPomodoros, viewModel::setAutostartPomodoros)
+                    SwitchRow(stringResource(R.string.setting_autostart_breaks), settings.autostartBreaks, viewModel::setAutostartBreaks)
+                    RowDivider()
+                    Stepper(
+                        label = stringResource(R.string.setting_idle_alert),
+                        value = settings.idleAlertMinutes,
+                        onValueChange = viewModel::setIdleAlertMinutes,
+                        min = 0, max = 120,
+                        valueText = { v ->
+                            if (v == 0) context.getString(R.string.value_off)
+                            else "$v ${context.getString(R.string.minutes_unit)}"
+                        }
                     )
-                } else {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                runCatching { batteryLauncher.launch(BatteryOptimization.requestIntent(context)) }
-                                    .onFailure { batteryLauncher.launch(BatteryOptimization.settingsListIntent()) }
-                            }
-                            .padding(vertical = 8.dp)
-                    ) {
-                        Text(stringResource(R.string.battery_action))
-                        Text(
-                            stringResource(R.string.battery_summary),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    Caption(stringResource(R.string.setting_idle_alert_summary))
+                    Stepper(
+                        label = stringResource(R.string.setting_day_end),
+                        value = settings.dayEndHour * 60 + settings.dayEndMinute,
+                        onValueChange = { total -> viewModel.setDayEnd(total / 60, total % 60) },
+                        min = 0, max = 23 * 60 + 55, step = 5,
+                        valueText = { total -> String.format(Locale.US, "%02d:%02d", total / 60, total % 60) }
+                    )
+                    Caption(stringResource(R.string.setting_day_end_summary))
                 }
             }
 
-            item { HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp)) }
+            // --- Background reliability ---
+            item {
+                SettingsGroup(stringResource(R.string.section_background)) {
+                    if (batteryExempt) {
+                        Text(
+                            stringResource(R.string.battery_ok),
+                            modifier = Modifier.padding(vertical = 10.dp)
+                        )
+                    } else {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    runCatching { batteryLauncher.launch(BatteryOptimization.requestIntent(context)) }
+                                        .onFailure { batteryLauncher.launch(BatteryOptimization.settingsListIntent()) }
+                                }
+                                .padding(vertical = 10.dp)
+                        ) {
+                            Text(stringResource(R.string.battery_action))
+                            Caption(stringResource(R.string.battery_summary))
+                        }
+                    }
+                }
+            }
 
             // --- Appearance ---
-            item { SectionHeader(stringResource(R.string.section_appearance)) }
             item {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    val modes = listOf(
-                        ThemeMode.SYSTEM to R.string.theme_system,
-                        ThemeMode.LIGHT to R.string.theme_light,
-                        ThemeMode.DARK to R.string.theme_dark
+                SettingsGroup(stringResource(R.string.section_appearance)) {
+                    SegmentedChoice(
+                        options = listOf(
+                            ThemeMode.SYSTEM to stringResource(R.string.theme_system),
+                            ThemeMode.LIGHT to stringResource(R.string.theme_light),
+                            ThemeMode.DARK to stringResource(R.string.theme_dark)
+                        ),
+                        selected = settings.themeMode,
+                        onSelect = viewModel::setThemeMode,
+                        modifier = Modifier.padding(vertical = 8.dp)
                     )
-                    modes.forEach { (mode, labelRes) ->
-                        FilterChip(
-                            selected = settings.themeMode == mode,
-                            onClick = { viewModel.setThemeMode(mode) },
-                            label = { Text(stringResource(labelRes)) }
-                        )
-                    }
                 }
             }
 
-            item { HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp)) }
-
             // --- Language ---
-            item { SectionHeader(stringResource(R.string.setting_language)) }
             item {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    AppLanguage.entries.forEach { lang ->
-                        FilterChip(
-                            selected = settings.language == lang,
-                            onClick = {
-                                if (settings.language != lang) {
-                                    viewModel.setLanguage(lang)
-                                    context.findActivity()?.recreate()
-                                }
-                            },
-                            label = { Text(lang.name.lowercase().replaceFirstChar { it.uppercase() }) }
-                        )
-                    }
+                SettingsGroup(stringResource(R.string.setting_language)) {
+                    SegmentedChoice(
+                        options = listOf(
+                            AppLanguage.ENGLISH to "English",
+                            AppLanguage.RUSSIAN to "Русский"
+                        ),
+                        selected = settings.language,
+                        onSelect = { lang ->
+                            if (settings.language != lang) {
+                                viewModel.setLanguage(lang)
+                                context.findActivity()?.recreate()
+                            }
+                        },
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
                 }
             }
         }
@@ -234,12 +210,33 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun SectionHeader(text: String) {
+private fun SettingsGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Column {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = 4.dp, bottom = 6.dp)
+        )
+        ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) { content() }
+        }
+    }
+}
+
+@Composable
+private fun RowDivider() {
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+}
+
+@Composable
+private fun Caption(text: String) {
     Text(
         text = text,
-        style = MaterialTheme.typography.titleMedium,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(vertical = 8.dp)
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(bottom = 6.dp)
     )
 }
 
@@ -249,7 +246,7 @@ private fun SwitchRow(label: String, checked: Boolean, onCheckedChange: (Boolean
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onCheckedChange(!checked) }
-            .padding(vertical = 8.dp),
+            .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(label, modifier = Modifier.weight(1f))
@@ -268,11 +265,11 @@ private fun ProjectRow(project: Project, onClick: () -> Unit, onDelete: () -> Un
     ) {
         Box(
             modifier = Modifier
-                .size(20.dp)
+                .size(22.dp)
                 .clip(CircleShape)
                 .background(Color(project.pomodoroColor))
         )
-        Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
+        Column(modifier = Modifier.weight(1f).padding(start = 14.dp)) {
             Text(project.name, fontWeight = FontWeight.Medium)
             Text(
                 "${project.focusMinutes}/${project.shortBreakMinutes} · ${project.pomodorosPerSession}🍅",
@@ -281,7 +278,11 @@ private fun ProjectRow(project: Project, onClick: () -> Unit, onDelete: () -> Un
             )
         }
         IconButton(onClick = onDelete) {
-            Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.cd_delete))
+            Icon(
+                Icons.Filled.DeleteOutline,
+                contentDescription = stringResource(R.string.cd_delete),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

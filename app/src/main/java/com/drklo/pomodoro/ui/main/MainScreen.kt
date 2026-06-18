@@ -28,6 +28,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,11 +48,13 @@ import com.drklo.pomodoro.data.model.TimerStatus
 import com.drklo.pomodoro.timer.TimerState
 import com.drklo.pomodoro.timer.formatMmSs
 import com.drklo.pomodoro.ui.main.components.Fanfare
+import com.drklo.pomodoro.ui.main.components.PausedBookmark
 import com.drklo.pomodoro.ui.main.components.SessionBullets
 import com.drklo.pomodoro.ui.main.components.TimerDial
 import com.drklo.pomodoro.ui.theme.DefaultPomodoroColor
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(
@@ -97,6 +101,13 @@ fun MainScreen(
     val isLandscape =
         LocalConfiguration.current.screenWidthDp > LocalConfiguration.current.screenHeightDp
 
+    // Paused session "parked" on its project; shown as a bookmark while browsing other projects.
+    val pausedProject = if (state.status == TimerStatus.PAUSED) state.project else null
+    val viewedProject = projects.getOrNull(pagerState.currentPage % projects.size)
+    val showBookmark = pausedProject != null && viewedProject?.id != pausedProject.id
+    var shakeTrigger by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    val scope = rememberCoroutineScope()
+
     Box(modifier = modifier.fillMaxSize()) {
         HorizontalPager(
             state = pagerState,
@@ -110,9 +121,33 @@ fun MainScreen(
                 state = state,
                 isActive = isActive,
                 isLandscape = isLandscape,
-                onTap = { if (isActive) viewModel.onPlayPause() },
-                onReset = viewModel::onReset,
-                onChangePhase = viewModel::onChangePhase
+                // Tapping a different project while one is paused is blocked; nudge the bookmark.
+                onTap = {
+                    if (isActive) viewModel.onPlayPause()
+                    else if (pausedProject != null) shakeTrigger++
+                },
+                onReset = { if (isActive) viewModel.onReset() },
+                onChangePhase = { if (isActive) viewModel.onChangePhase() }
+            )
+        }
+
+        // Bookmark for the paused project (bottom-right, sticks out from the edge).
+        if (showBookmark && pausedProject != null) {
+            PausedBookmark(
+                color = Color(pausedProject.pomodoroColor),
+                timeText = formatMmSs(state.remainingSeconds),
+                shakeTrigger = shakeTrigger,
+                onClick = {
+                    val pausedIndex = projects.indexOfFirst { it.id == pausedProject.id }
+                    if (pausedIndex >= 0) {
+                        val base = pagerState.currentPage - (pagerState.currentPage % projects.size)
+                        scope.launch { pagerState.animateScrollToPage(base + pausedIndex) }
+                    }
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .navigationBarsPadding()
+                    .padding(bottom = 72.dp)
             )
         }
 

@@ -76,10 +76,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         engine.reset()
     }
 
-    /** Carousel selection (F-008). No-op while running. */
+    /**
+     * Carousel selection (F-008). While paused the timer is "parked" on its project, so swiping
+     * only browses (no rebind) — the paused session is preserved and shown as a bookmark instead.
+     */
     fun onSelectProject(index: Int) {
         val list = projects.value
         val project = list.getOrNull(index) ?: return
+        val status = engine.state.value.status
+        if (status == TimerStatus.RUNNING || status == TimerStatus.PAUSED) return
         if (project.id == engine.state.value.project?.id) return
         engine.setActiveProject(project)
     }

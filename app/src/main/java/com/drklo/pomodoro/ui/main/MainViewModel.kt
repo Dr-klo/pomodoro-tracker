@@ -58,6 +58,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /**
+     * Called when the app returns to the foreground. Re-evaluates the session/today counters against
+     * the current logical day so yesterday's bullets don't linger after the process survives overnight.
+     */
+    fun onAppForegrounded() {
+        engine.refreshForNewDayIfNeeded()
+    }
+
     /** Index of the currently active project within [projects], or 0. */
     fun indexOfActiveProject(): Int {
         val id = engine.state.value.project?.id ?: return 0

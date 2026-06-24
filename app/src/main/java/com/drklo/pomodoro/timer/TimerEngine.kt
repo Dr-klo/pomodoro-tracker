@@ -45,6 +45,10 @@ class TimerEngine(
     private var tickJob: Job? = null
     private var idleJob: Job? = null
 
+    /** Logical day for which [TimerState.completedToday]/[TimerState.completedInSession] were computed. */
+    @Volatile
+    private var sessionDayKey: String? = null
+
     /** Wall-clock (elapsedRealtime) deadline at which the running phase reaches zero. */
     private var deadlineElapsed: Long = 0L
 
@@ -115,6 +119,38 @@ class TimerEngine(
                 idleAlertActive = false
             )
         }
+    }
+
+    /**
+     * Rolls the in-memory session/today counters onto the current logical day (F-022). The counters
+     * live only in [TimerState] and are otherwise recomputed solely on project (re)selection, so when
+     * the process survives past the day-end boundary (e.g. overnight) yesterday's filled bullets stay
+     * on screen. Call this when the app returns to the foreground.
+     *
+     * Only a stopped/between-phase state rolls over; a running or paused (parked) interval is left
+     * untouched. A stale "awaiting next break" prompt from yesterday is cleared back to a pomodoro.
+     */
+    fun refreshForNewDayIfNeeded() {
+        val s = _state.value
+        val project = s.project ?: return
+        if (s.status != TimerStatus.IDLE) return
+        if (sessionDayKey != null && sessionDayKey == currentDayKey()) return
+        stopIdleAlert()
+        if (s.awaitingNext || s.phase != Phase.POMODORO) {
+            val total = project.durationSecondsFor(Phase.POMODORO)
+            _state.update {
+                it.copy(
+                    phase = Phase.POMODORO,
+                    totalSeconds = total,
+                    remainingSeconds = total,
+                    awaitingNext = false,
+                    pomodorosSinceLongBreak = 0
+                )
+            }
+        } else {
+            _state.update { it.copy(pomodorosSinceLongBreak = 0) }
+        }
+        refreshCompletedToday(project)
     }
 
     /** Manually changes the phase type (F-021). Allowed while IDLE or PAUSED. */
@@ -301,8 +337,10 @@ class TimerEngine(
     }
 
     private fun refreshCompletedToday(project: Project) {
+        val dayKey = currentDayKey()
+        sessionDayKey = dayKey
         scope.launch {
-            val today = statsRepository.completedCount(project.id, currentDayKey())
+            val today = statsRepository.completedCount(project.id, dayKey)
             // Restore session bullets from today's completed count so progress survives a restart
             // (PRD: restore the count of completed pomodoros).
             val perSession = project.pomodorosPerSession.coerceAtLeast(1)

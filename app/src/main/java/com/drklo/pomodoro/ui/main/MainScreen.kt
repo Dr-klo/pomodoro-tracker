@@ -251,12 +251,21 @@ private fun ProjectPage(
         else 1f
     val filledBullets = if (isActive) state.completedInSession else 0
 
-    // Phase color is the BACKGROUND; foreground stays white (#3). Idle alert strobes the color (#6);
-    // idleAlertActive is only ever true while stalled (paused or awaiting next), so this is safe.
+    // Phase color is the BACKGROUND; foreground stays white (#3).
+    // While awaiting the next phase (a phase finished but isn't auto-started) keep showing the COLOR
+    // of the JUST-FINISHED phase, so peripheral vision doesn't read the screen as a new phase already
+    // running. state.phase is already the NEXT phase here, so the finished color is the opposite one.
+    // The idle-alert strobe (#6) alternates against that base; idleAlertActive is only ever true while
+    // stalled (paused or awaiting), so this is safe.
+    val phaseColor = Color(project.colorFor(phase))
+    val oppositeColor =
+        Color(if (phase == Phase.POMODORO) project.breakColor else project.pomodoroColor)
+    val awaiting = isActive && state.awaitingNext && status == TimerStatus.IDLE
     val flip = isActive && state.idleAlertActive
     val bgColor: Color = when {
-        flip -> Color(if (phase == Phase.POMODORO) project.breakColor else project.pomodoroColor)
-        else -> Color(project.colorFor(phase))
+        awaiting -> if (flip) phaseColor else oppositeColor // hold finished color; strobe to upcoming
+        flip -> oppositeColor
+        else -> phaseColor
     }.takeIf { it.alpha > 0f } ?: DefaultPomodoroColor
     val fg = Color.White
 

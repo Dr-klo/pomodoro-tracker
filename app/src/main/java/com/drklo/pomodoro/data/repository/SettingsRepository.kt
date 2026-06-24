@@ -25,6 +25,7 @@ class SettingsRepository(private val context: Context) {
         val AUTOSTART = booleanPreferencesKey("autostart")
         val AUTOSTART_BREAKS = booleanPreferencesKey("autostart_breaks")
         val IDLE_ALERT_MIN = intPreferencesKey("idle_alert_minutes")
+        val HOLD_FINISHED_COLOR = booleanPreferencesKey("hold_finished_phase_color")
         val DAY_END_HOUR = intPreferencesKey("day_end_hour")
         val DAY_END_MINUTE = intPreferencesKey("day_end_minute")
         val LANGUAGE = stringPreferencesKey("language")
@@ -40,6 +41,7 @@ class SettingsRepository(private val context: Context) {
             autostartPomodoros = p[Keys.AUTOSTART] ?: defaults.autostartPomodoros,
             autostartBreaks = p[Keys.AUTOSTART_BREAKS] ?: defaults.autostartBreaks,
             idleAlertMinutes = p[Keys.IDLE_ALERT_MIN] ?: defaults.idleAlertMinutes,
+            holdFinishedPhaseColor = p[Keys.HOLD_FINISHED_COLOR] ?: defaults.holdFinishedPhaseColor,
             dayEndHour = p[Keys.DAY_END_HOUR] ?: defaults.dayEndHour,
             dayEndMinute = p[Keys.DAY_END_MINUTE] ?: defaults.dayEndMinute,
             language = AppLanguage.fromTag(p[Keys.LANGUAGE]),
@@ -53,6 +55,7 @@ class SettingsRepository(private val context: Context) {
     suspend fun setAutostartPomodoros(value: Boolean) = edit { it[Keys.AUTOSTART] = value }
     suspend fun setAutostartBreaks(value: Boolean) = edit { it[Keys.AUTOSTART_BREAKS] = value }
     suspend fun setIdleAlertMinutes(value: Int) = edit { it[Keys.IDLE_ALERT_MIN] = value.coerceAtLeast(0) }
+    suspend fun setHoldFinishedPhaseColor(value: Boolean) = edit { it[Keys.HOLD_FINISHED_COLOR] = value }
 
     suspend fun setDayEnd(hour: Int, minute: Int) = edit {
         it[Keys.DAY_END_HOUR] = hour.coerceIn(0, 23)

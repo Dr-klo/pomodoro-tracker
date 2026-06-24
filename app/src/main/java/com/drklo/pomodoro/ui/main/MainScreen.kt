@@ -174,6 +174,7 @@ fun MainScreen(
                 state = state,
                 isActive = isActive,
                 isLandscape = isLandscape,
+                holdFinishedColor = settings.holdFinishedPhaseColor,
                 // Tapping a different project while one is paused is blocked; nudge the bookmark.
                 onTap = {
                     if (isActive) viewModel.onPlayPause()
@@ -239,6 +240,7 @@ private fun ProjectPage(
     state: TimerState,
     isActive: Boolean,
     isLandscape: Boolean,
+    holdFinishedColor: Boolean,
     onTap: () -> Unit,
     onReset: () -> Unit,
     onChangePhase: () -> Unit
@@ -260,7 +262,7 @@ private fun ProjectPage(
     val phaseColor = Color(project.colorFor(phase))
     val oppositeColor =
         Color(if (phase == Phase.POMODORO) project.breakColor else project.pomodoroColor)
-    val awaiting = isActive && state.awaitingNext && status == TimerStatus.IDLE
+    val awaiting = holdFinishedColor && isActive && state.awaitingNext && status == TimerStatus.IDLE
     val flip = isActive && state.idleAlertActive
     val bgColor: Color = when {
         awaiting -> if (flip) phaseColor else oppositeColor // hold finished color; strobe to upcoming

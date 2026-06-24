@@ -31,6 +31,7 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
     fun setAutostartPomodoros(value: Boolean) = viewModelScope.launch { settingsRepo.setAutostartPomodoros(value) }
     fun setAutostartBreaks(value: Boolean) = viewModelScope.launch { settingsRepo.setAutostartBreaks(value) }
     fun setIdleAlertMinutes(value: Int) = viewModelScope.launch { settingsRepo.setIdleAlertMinutes(value) }
+    fun setHoldFinishedPhaseColor(value: Boolean) = viewModelScope.launch { settingsRepo.setHoldFinishedPhaseColor(value) }
     fun setDayEnd(hour: Int, minute: Int) = viewModelScope.launch { settingsRepo.setDayEnd(hour, minute) }
     fun setLanguage(language: AppLanguage) = viewModelScope.launch { settingsRepo.setLanguage(language) }
     fun setThemeMode(mode: ThemeMode) = viewModelScope.launch { settingsRepo.setThemeMode(mode) }

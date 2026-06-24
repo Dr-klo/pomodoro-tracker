@@ -70,6 +70,8 @@
     <string name="setting_autostart_breaks">Автозапуск пауз</string>
     <string name="setting_idle_alert">Алерт при простое</string>
     <string name="setting_idle_alert_summary">Менять цвета экрана каждые N мин при простое (только при включённом экране)</string>
+    <string name="setting_hold_finished_color">Держать цвет завершённого этапа</string>
+    <string name="setting_hold_finished_color_summary">Пока ждём запуск следующего этапа, оставлять цвет того, что только что закончился</string>
     <string name="setting_day_end">Конец дня</string>
     <string name="setting_day_end_summary">Когда начинается новый день для целей</string>
     <string name="section_background">Работа в фоне</string>

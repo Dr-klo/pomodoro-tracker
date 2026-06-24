@@ -122,6 +122,8 @@ fun SettingsScreen(
                     SwitchRow(stringResource(R.string.setting_always_on), settings.alwaysOnDisplay, viewModel::setAlwaysOn)
                     SwitchRow(stringResource(R.string.setting_autostart_pomodoros), settings.autostartPomodoros, viewModel::setAutostartPomodoros)
                     SwitchRow(stringResource(R.string.setting_autostart_breaks), settings.autostartBreaks, viewModel::setAutostartBreaks)
+                    SwitchRow(stringResource(R.string.setting_hold_finished_color), settings.holdFinishedPhaseColor, viewModel::setHoldFinishedPhaseColor)
+                    Caption(stringResource(R.string.setting_hold_finished_color_summary))
                     RowDivider()
                     Stepper(
                         label = stringResource(R.string.setting_idle_alert),

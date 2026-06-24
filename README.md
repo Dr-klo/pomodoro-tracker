@@ -74,19 +74,30 @@ counter and a detailed log row used by the reports.
 
 ## Build & run
 
-Requires Android Studio (bundles the JDK, SDK, and Gradle). Target device: Samsung Galaxy A51
-(Android 10+).
+Android Studio is the simplest path (Open project → first Gradle sync downloads Gradle and
+generates the wrapper jar if missing → Run the `app` config). The command line works too — no
+separate JDK/SDK install needed, reuse the ones Android Studio bundles.
 
-1. Open the project folder in Android Studio and let the first Gradle sync finish (it downloads
-   Gradle 8.9 and generates `gradle/wrapper/gradle-wrapper.jar` if missing).
-2. Select the `app` run configuration and Run on a device/emulator.
+Target device: Samsung Galaxy A50/A51 (Android 10+).
 
-Command line (with `JAVA_HOME` pointing at a JDK 17, e.g. Android Studio's `jbr`):
+### Build, commit & deploy from the command line (Windows / PowerShell)
 
-```bash
-./gradlew :app:assembleDebug
-# APK at app/build/outputs/apk/debug/app-debug.apk
-adb install -r app/build/outputs/apk/debug/app-debug.apk
+Android Studio's JBR is the JDK; the SDK ships `adb`. On this machine:
+
+```powershell
+$env:JAVA_HOME = "$env:LOCALAPPDATA\Programs\Android Studio\jbr"
+$adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
+
+# Build the debug APK (SDK path comes from local.properties, not in git)
+.\gradlew.bat :app:assembleDebug
+# -> app\build\outputs\apk\debug\app-debug.apk
+
+# Deploy to the connected device (check it's there first)
+& $adb devices
+& $adb install -r app\build\outputs\apk\debug\app-debug.apk
+
+# Commit (multi-line message via a file — PowerShell splits `-m` here-strings)
+git commit -F path\to\message.txt
 ```
 
 ### Samsung background note

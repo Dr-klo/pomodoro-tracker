@@ -181,6 +181,7 @@ fun MainScreen(
                     else if (pausedProject != null) shakeTrigger++
                 },
                 onReset = { if (isActive) viewModel.onReset() },
+                onSeek = { if (isActive) viewModel.onSeek(it) },
                 onChangePhase = { if (isActive) viewModel.onChangePhase() }
             )
         }
@@ -243,6 +244,7 @@ private fun ProjectPage(
     holdFinishedColor: Boolean,
     onTap: () -> Unit,
     onReset: () -> Unit,
+    onSeek: (Float) -> Unit,
     onChangePhase: () -> Unit
 ) {
     // The page reflects live state only for the active project; others show an idle preview.
@@ -294,7 +296,7 @@ private fun ProjectPage(
             status = status,
             showHand = status == TimerStatus.RUNNING,
             onTap = onTap,
-            onLongHoldComplete = onReset,
+            onSeek = onSeek,
             modifier = dialModifier
         )
     }

@@ -84,6 +84,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         engine.reset()
     }
 
+    /** Scrubs the active interval's remaining time to [fraction] of its total (dial drag). */
+    fun onSeek(fraction: Float) {
+        engine.seek(fraction)
+    }
+
     /**
      * Carousel selection (F-008). While paused the timer is "parked" on its project, so swiping
      * only browses (no rebind) — the paused session is preserved and shown as a bookmark instead.

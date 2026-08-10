@@ -153,6 +153,26 @@ class TimerEngine(
         refreshCompletedToday(project)
     }
 
+    /**
+     * Scrubs the current interval to [fraction] of its total remaining (0 = almost done, 1 = full),
+     * letting the user "fast-forward" a phase they started late (e.g. forgot to start the timer for
+     * an already-running meeting). Allowed while RUNNING, PAUSED or IDLE. Clamped to at least 1s so a
+     * stray drag can't auto-complete the phase. Session/today progress is untouched.
+     */
+    fun seek(fraction: Float) {
+        val s = _state.value
+        if (s.project == null || s.totalSeconds <= 0) return
+        val target = (fraction.coerceIn(0f, 1f) * s.totalSeconds).toInt().coerceIn(1, s.totalSeconds)
+        when (s.status) {
+            TimerStatus.RUNNING -> {
+                deadlineElapsed = SystemClock.elapsedRealtime() + target * 1000L
+                _state.update { it.copy(remainingSeconds = target) }
+            }
+            TimerStatus.PAUSED, TimerStatus.IDLE ->
+                _state.update { it.copy(remainingSeconds = target) }
+        }
+    }
+
     /** Manually changes the phase type (F-021). Allowed while IDLE or PAUSED. */
     fun setPhase(phase: Phase) {
         val s = _state.value

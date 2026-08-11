@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -35,18 +37,21 @@ fun StackedBarChart(
     val highlightColor = MaterialTheme.colorScheme.surfaceVariant
     val selectedLabelColor = MaterialTheme.colorScheme.onSurface
     val maxTotal = columns.maxOfOrNull { it.total }?.coerceAtLeast(1f) ?: 1f
+    // Read through latest state so the gesture detector never has to restart on selection.
+    val currentSelection by rememberUpdatedState(selectedIndex)
+    val currentOnSelect by rememberUpdatedState(onSelect)
 
     Canvas(
         modifier = modifier
             .fillMaxWidth()
             .height(160.dp)
-            .pointerInput(columns.size, selectedIndex) {
+            .pointerInput(columns.size) {
                 detectTapGestures { offset ->
                     if (columns.isEmpty()) return@detectTapGestures
                     val index = (offset.x / (size.width / columns.size))
                         .toInt()
                         .coerceIn(0, columns.lastIndex)
-                    onSelect(if (index == selectedIndex) null else index)
+                    currentOnSelect(if (index == currentSelection) null else index)
                 }
             }
     ) {

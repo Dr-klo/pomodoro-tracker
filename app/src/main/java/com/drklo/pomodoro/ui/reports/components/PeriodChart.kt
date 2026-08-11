@@ -37,10 +37,12 @@ fun PeriodChart(
     var selected by remember { mutableStateOf<Int?>(null) }
 
     val buckets = remember(aggregation, page, today) { bucketsFor(aggregation, today, page, locale) }
-    val bars = remember(logs, buckets, projects) { buildStackedBars(logs, buckets, projects, valueOf) }
+    val bars = remember(logs, buckets, projects) {
+        buildStackedBars(logs, buckets, projects, locale, valueOf)
+    }
 
     val prevBuckets = remember(aggregation, page, today) { bucketsFor(aggregation, today, page + 1, locale) }
-    val prevBars = remember(logs, prevBuckets, projects) { buildStackedBars(logs, prevBuckets, projects, valueOf) }
+    val prevBars = remember(logs, prevBuckets, projects) { buildStackedBars(logs, prevBuckets, projects, locale, valueOf) }
 
     val average = if (bars.isNotEmpty()) bars.sumOf { it.total.toDouble() } / bars.size else 0.0
     val maxTotal = bars.maxOfOrNull { it.total } ?: 0f

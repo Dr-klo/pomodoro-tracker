@@ -64,13 +64,11 @@ fun MonthCalendar(
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
     val month = remember(today, page) { YearMonth.from(today).minusMonths(page.toLong()) }
 
-    // dayKey -> projectId -> completed count
-    val counts = remember(logs) {
-        logs.groupBy { it.dayKey }
-            .mapValues { (_, l) -> l.groupingBy { it.projectId }.eachCount() }
-    }
+    // dayKey -> that day's totals and per-project split, indexed once per log change.
     val dayMetrics = remember(logs) { metricsByDay(logs) }
     val goalProjects = remember(projects) { projects.filter { it.dailyGoal > 0 } }
+    // The whole ring is the day's combined goal, so each project's arc is weighted by its own goal.
+    val totalGoal = remember(goalProjects) { goalProjects.sumOf { it.dailyGoal } }
 
     val monthLabel = remember(month, locale) {
         month.format(DateTimeFormatter.ofPattern("LLLL yyyy").withLocale(locale))
@@ -119,13 +117,18 @@ fun MonthCalendar(
                 week.forEach { date ->
                     Box(modifier = Modifier.weight(1f).aspectRatio(1f).padding(3.dp)) {
                         if (date != null) {
-                            val dayCounts = counts[date.toString()].orEmpty()
-                            val ratios = goalProjects.map { p ->
-                                p.pomodoroColor to ((dayCounts[p.id] ?: 0).toFloat() / p.dailyGoal).coerceIn(0f, 1f)
+                            val dayCounts = dayMetrics[date.toString()]?.byProject.orEmpty()
+                            val arcs = goalProjects.map { p ->
+                                val done = dayCounts[p.id]?.pomodoros ?: 0
+                                GoalArc(
+                                    colorArgb = p.pomodoroColor,
+                                    share = p.dailyGoal.toFloat() / totalGoal,
+                                    fill = (done.toFloat() / p.dailyGoal).coerceIn(0f, 1f)
+                                )
                             }
                             DayCell(
                                 day = date.dayOfMonth,
-                                ratios = ratios,
+                                arcs = arcs,
                                 isToday = date == today,
                                 isSelected = date == selectedDate,
                                 onClick = {
@@ -138,22 +141,25 @@ fun MonthCalendar(
             }
         }
 
-        val metrics = selectedDate?.let { dayMetrics[it.toString()] }
-        val selectedCounts = selectedDate?.let { counts[it.toString()] }.orEmpty()
+        val selectedMetrics = selectedDate?.let { dayMetrics[it.toString()] }
         ChartTooltip(
             title = selectedDate?.format(dayTitle.withLocale(locale)),
-            focusSec = metrics?.focusSec ?: 0,
-            pomodoros = metrics?.pomodoros ?: 0,
+            focusSec = selectedMetrics?.total?.focusSec ?: 0,
+            pomodoros = selectedMetrics?.total?.pomodoros ?: 0,
             hint = stringResource(R.string.chart_tap_hint_day),
-            rows = goalProjects.map { p ->
-                val done = selectedCounts[p.id] ?: 0
+            // Only projects that ran that day, so the rows add up to the headline above them.
+            rows = projects.mapNotNull { p ->
+                val totals = selectedMetrics?.byProject?.get(p.id) ?: return@mapNotNull null
+                val goal = if (p.dailyGoal > 0) {
+                    " · " + stringResource(R.string.chart_goal_progress, totals.pomodoros, p.dailyGoal)
+                } else {
+                    ""
+                }
                 TooltipRow(
-                    name = "${p.name} · ${stringResource(R.string.chart_goal_progress, done, p.dailyGoal)}",
+                    name = p.name + goal,
                     colorArgb = p.pomodoroColor,
-                    focusSec = logs.filter {
-                        it.projectId == p.id && it.dayKey == selectedDate?.toString()
-                    }.sumOf { it.durationSeconds },
-                    pomodoros = done
+                    focusSec = totals.focusSec,
+                    pomodoros = totals.pomodoros
                 )
             }
         )
@@ -162,10 +168,21 @@ fun MonthCalendar(
 
 private val dayTitle: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE, dd.MM")
 
+/**
+ * One project's arc in a day ring: it owns [share] of the circle (its daily goal's weight in the
+ * day's combined goal) and that arc is [fill]ed by how much of the goal was closed. Because the
+ * two multiply, the drawn length is proportional to pomodoros actually completed — a goal of 8
+ * closed in full draws twice the arc of a goal of 4 closed in full.
+ */
+private data class GoalArc(val colorArgb: Int, val share: Float, val fill: Float)
+
+/** Degrees of blank kept between neighbouring project arcs so they stay distinguishable. */
+private const val GAP = 3f
+
 @Composable
 private fun DayCell(
     day: Int,
-    ratios: List<Pair<Int, Float>>,
+    arcs: List<GoalArc>,
     isToday: Boolean,
     isSelected: Boolean,
     onClick: () -> Unit
@@ -194,20 +211,20 @@ private fun DayCell(
                 startAngle = 0f, sweepAngle = 360f, useCenter = false,
                 topLeft = topLeft, size = arcSize, style = Stroke(width = stroke)
             )
-            if (ratios.isNotEmpty()) {
-                val wedge = 360f / ratios.size
-                ratios.forEachIndexed { i, (colorArgb, ratio) ->
-                    if (ratio > 0f) {
-                        drawArc(
-                            color = Color(colorArgb),
-                            startAngle = -90f + i * wedge + 1.5f,
-                            sweepAngle = (wedge - 3f) * ratio,
-                            useCenter = false,
-                            topLeft = topLeft, size = arcSize,
-                            style = Stroke(width = stroke)
-                        )
-                    }
+            var wedgeStart = -90f
+            arcs.forEach { arc ->
+                val wedge = 360f * arc.share
+                if (arc.fill > 0f) {
+                    drawArc(
+                        color = Color(arc.colorArgb),
+                        startAngle = wedgeStart + GAP / 2f,
+                        sweepAngle = (wedge - GAP).coerceAtLeast(0f) * arc.fill,
+                        useCenter = false,
+                        topLeft = topLeft, size = arcSize,
+                        style = Stroke(width = stroke)
+                    )
                 }
+                wedgeStart += wedge
             }
         }
         Text(

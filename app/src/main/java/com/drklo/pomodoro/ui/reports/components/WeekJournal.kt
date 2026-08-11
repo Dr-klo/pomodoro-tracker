@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.drklo.pomodoro.R
@@ -59,34 +61,27 @@ fun WeekJournal(
         Triple(date, label, logs.filter { it.dayKey == date.toString() })
     }
 
-    val rowCount = 7
     val gridHours = intArrayOf(0, 4, 8, 12, 16, 20, 24)
     var selectedRow by remember { mutableStateOf<Int?>(null) }
+    val currentSelection by rememberUpdatedState(selectedRow)
 
     Column(modifier = modifier.fillMaxWidth()) {
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
-                .height((rowCount * 30 + 28).dp)
-                .pointerInput(selectedRow) {
+                .height(CANVAS_HEIGHT)
+                .pointerInput(Unit) {
                     detectTapGestures { offset ->
-                        val topPad = 6.dp.toPx()
-                        val plotHeight = size.height - topPad - 18.dp.toPx()
-                        val rowH = plotHeight / rowCount
-                        val index = ((offset.y - topPad) / rowH).toInt()
-                        if (index in 0 until rowCount) {
-                            selectedRow = if (index == selectedRow) null else index
-                        }
+                        val index = rowAt(offset.y, size.height.toFloat()) ?: return@detectTapGestures
+                        selectedRow = if (index == currentSelection) null else index
                     }
                 }
         ) {
-            val leftGutter = 42.dp.toPx()
-            val bottomAxis = 18.dp.toPx()
-            val topPad = 6.dp.toPx()
-            val plotLeft = leftGutter
-            val plotWidth = size.width - leftGutter
-            val plotHeight = size.height - topPad - bottomAxis
-            val rowH = plotHeight / rowCount
+            val plotLeft = LEFT_GUTTER.toPx()
+            val plotWidth = size.width - plotLeft
+            val topPad = TOP_PAD.toPx()
+            val plotHeight = plotHeight(size.height)
+            val rowH = rowHeight(size.height)
 
             val labelPaint = android.graphics.Paint().apply {
                 color = textColor.toArgb()
@@ -175,6 +170,24 @@ fun WeekJournal(
 }
 
 private val dayTitle: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE, dd.MM")
+
+// Grid geometry, defined once: the draw pass and the hit test must agree on where a row is, so
+// neither is allowed its own copy of these numbers.
+private const val ROW_COUNT = 7
+private val ROW_SPACING = 30.dp
+private val TOP_PAD = 6.dp
+private val BOTTOM_AXIS = 18.dp
+private val LEFT_GUTTER = 42.dp
+private val CANVAS_HEIGHT = ROW_SPACING * ROW_COUNT + TOP_PAD + BOTTOM_AXIS + 4.dp
+
+private fun Density.plotHeight(canvasHeight: Float): Float =
+    canvasHeight - TOP_PAD.toPx() - BOTTOM_AXIS.toPx()
+
+private fun Density.rowHeight(canvasHeight: Float): Float = plotHeight(canvasHeight) / ROW_COUNT
+
+/** Row index under [y] on a canvas of [canvasHeight], or null if the tap fell outside the grid. */
+private fun Density.rowAt(y: Float, canvasHeight: Float): Int? =
+    ((y - TOP_PAD.toPx()) / rowHeight(canvasHeight)).toInt().takeIf { it in 0 until ROW_COUNT }
 
 private fun clockFraction(epochMs: Long, zone: ZoneId): Float {
     val t = Instant.ofEpochMilli(epochMs).atZone(zone).toLocalTime()

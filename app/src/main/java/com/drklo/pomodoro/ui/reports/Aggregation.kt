@@ -134,12 +134,28 @@ fun sumByProject(
         .sortedByDescending { it.value }
 }
 
-/** Focus seconds and pomodoro count for a single logical day, keyed by [PomodoroLog.dayKey]. */
-data class DayMetrics(val focusSec: Int, val pomodoros: Int)
+/** The two numbers every report element reports: time spent and pomodoros closed. */
+data class Totals(val focusSec: Int = 0, val pomodoros: Int = 0)
 
-fun metricsByDay(logs: List<PomodoroLog>): Map<String, DayMetrics> =
-    logs.groupBy { it.dayKey }
-        .mapValues { (_, l) -> DayMetrics(l.sumOf { it.durationSeconds }, l.size) }
+/** One logical day's totals, plus the same split per project. */
+data class DayMetrics(val total: Totals, val byProject: Map<Long, Totals>)
+
+/**
+ * Indexes [logs] by [PomodoroLog.dayKey] in a single pass, so a calendar can read a day's totals,
+ * its per-project split and its goal progress without re-scanning the log per project.
+ */
+fun metricsByDay(logs: List<PomodoroLog>): Map<String, DayMetrics> {
+    val days = HashMap<String, Pair<Metrics, HashMap<Long, Metrics>>>()
+    for (log in logs) {
+        val (total, byProject) = days.getOrPut(log.dayKey) { Metrics() to HashMap() }
+        total.add(log)
+        byProject.getOrPut(log.projectId) { Metrics() }.add(log)
+    }
+    return days.mapValues { (_, day) ->
+        val (total, byProject) = day
+        DayMetrics(total.totals(), byProject.mapValues { (_, m) -> m.totals() })
+    }
+}
 
 /**
  * Aggregates [logs] into stacked bars over [buckets], one segment per project (in [projects] order),
@@ -150,6 +166,7 @@ fun buildStackedBars(
     logs: List<PomodoroLog>,
     buckets: List<DateBucket>,
     projects: List<Project>,
+    locale: Locale,
     valueOf: (PomodoroLog) -> Float
 ): List<BarColumn> {
     // bucketIndex -> projectId -> accumulated metrics
@@ -169,7 +186,7 @@ fun buildStackedBars(
         }
         BarColumn(
             label = bucket.label,
-            rangeLabel = rangeLabelOf(bucket),
+            rangeLabel = rangeLabelOf(bucket, locale),
             segments = segments,
             total = perProject.values.sumOf { it.value.toDouble() }.toFloat(),
             focusSec = perProject.values.sumOf { it.focusSec },
@@ -178,10 +195,19 @@ fun buildStackedBars(
     }
 }
 
-/** A self-describing label for a bucket, e.g. "Mon, 12.05" or "12.05 – 18.05". */
-private fun rangeLabelOf(bucket: DateBucket): String =
-    if (bucket.start == bucket.endInclusive) "${bucket.label}, ${bucket.start.format(dayMonth)}"
-    else "${bucket.start.format(dayMonth)} – ${bucket.endInclusive.format(dayMonth)}"
+/**
+ * A self-describing label for a bucket: "Mon, 12.05" for a day, "May 2026" for a whole calendar
+ * month (where a date range would say less than the axis label already does), "12.05 – 18.05"
+ * otherwise.
+ */
+private fun rangeLabelOf(bucket: DateBucket, locale: Locale): String = when {
+    bucket.start == bucket.endInclusive ->
+        "${bucket.label}, ${bucket.start.format(dayMonth)}"
+    bucket.start.dayOfMonth == 1 && bucket.endInclusive == bucket.start.plusMonths(1).minusDays(1) ->
+        bucket.start.format(monthYear.withLocale(locale))
+    else ->
+        "${bucket.start.format(dayMonth)} – ${bucket.endInclusive.format(dayMonth)}"
+}
 
 /** Mutable accumulator for the three numbers every chart element carries. */
 private class Metrics {
@@ -189,9 +215,12 @@ private class Metrics {
     var focusSec = 0
     var pomodoros = 0
 
-    fun add(log: PomodoroLog, drawnValue: Float) {
+    /** [drawnValue] is what the chart plots; the totals are collected the same way regardless. */
+    fun add(log: PomodoroLog, drawnValue: Float = 0f) {
         value += drawnValue
         focusSec += log.durationSeconds
         pomodoros += 1
     }
+
+    fun totals() = Totals(focusSec, pomodoros)
 }

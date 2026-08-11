@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,6 +64,7 @@ fun DonutChart(
     }
 
     var selectedId by remember { mutableStateOf<Long?>(null) }
+    val currentSelection by rememberUpdatedState(selectedId)
     val selected = values.firstOrNull { it.projectId == selectedId }
     val selectedIndex = values.indexOfFirst { it.projectId == selectedId }.takeIf { it >= 0 }
     val highlightColor = MaterialTheme.colorScheme.surfaceVariant
@@ -72,18 +74,15 @@ fun DonutChart(
             Canvas(
                 modifier = Modifier
                     .size(170.dp)
-                    .pointerInput(values, selectedId) {
+                    .pointerInput(values) {
                         detectTapGestures { offset ->
                             val index = sliceAt(offset, size.width.toFloat(), size.height.toFloat(), values, total)
-                            selectedId = if (index == null || values[index].projectId == selectedId) {
-                                null
-                            } else {
-                                values[index].projectId
-                            }
+                            val tapped = index?.let { values[it].projectId }
+                            selectedId = if (tapped == null || tapped == currentSelection) null else tapped
                         }
                     }
             ) {
-                val stroke = size.minDimension * 0.18f
+                val stroke = size.minDimension * DONUT_STROKE_RATIO
                 val inset = stroke / 2f
                 val arcSize = Size(size.width - stroke, size.height - stroke)
                 val topLeft = Offset(inset, inset)
@@ -174,7 +173,13 @@ fun DonutChart(
     }
 }
 
-/** Index of the slice under [offset] in a [width]x[height] donut, or null if the tap missed it. */
+/** Fraction of the donut's diameter taken by the ring; shared by the draw pass and the hit test. */
+private const val DONUT_STROKE_RATIO = 0.18f
+
+/**
+ * Index of the slice under [offset] in a [width]x[height] donut, or null if the tap missed the
+ * ring — including taps in the hole, which is where the center label sits and must stay inert.
+ */
 private fun sliceAt(
     offset: Offset,
     width: Float,
@@ -185,7 +190,9 @@ private fun sliceAt(
     val cx = width / 2f
     val cy = height / 2f
     val radius = minOf(width, height) / 2f
-    if (hypot(offset.x - cx, offset.y - cy) > radius) return null
+    val innerRadius = radius - minOf(width, height) * DONUT_STROKE_RATIO
+    val distance = hypot(offset.x - cx, offset.y - cy)
+    if (distance > radius || distance < innerRadius) return null
     // Degrees clockwise from 12 o'clock, where the first slice starts.
     val angle = (Math.toDegrees(atan2((offset.y - cy).toDouble(), (offset.x - cx).toDouble())) + 450.0) % 360.0
     var start = 0.0

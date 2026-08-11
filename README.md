@@ -106,6 +106,12 @@ One UI can put apps into deep sleep and kill long-running timers. In-app: **Sett
 reliability → Disable battery optimization**. If timers still die, remove the app from
 **Device care → Battery → Sleeping apps**.
 
+## Code review
+
+Baseline review of the whole codebase runs in fixed stages so it can be picked up one at a time:
+[docs/CODE_REVIEW_PLAN.md](docs/CODE_REVIEW_PLAN.md) (how to review, linters, testability track),
+[docs/REVIEW_FINDINGS.md](docs/REVIEW_FINDINGS.md) (what was found, stage statuses).
+
 ## Notes
 
 - Detailed statistics accrue from completed pomodoros logged after install; earlier daily counts

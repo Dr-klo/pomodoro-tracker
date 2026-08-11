@@ -44,11 +44,6 @@ class ReportsViewModel(app: Application) : AndroidViewModel(app) {
         .map { LogicalDay.dateFor(LocalDateTime.now(), it.dayEndHour, it.dayEndMinute) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LocalDate.now())
 
-    /** Project id -> pomodoro color (ARGB), for coloring chart segments. */
-    val projectColors: StateFlow<Map<Long, Int>> = projects
-        .map { list -> list.associate { it.id to it.pomodoroColor } }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
-
     val summary: StateFlow<ReportsSummary> =
         combine(logs, settings) { log, s ->
             val today = LogicalDay.dateFor(LocalDateTime.now(), s.dayEndHour, s.dayEndMinute)

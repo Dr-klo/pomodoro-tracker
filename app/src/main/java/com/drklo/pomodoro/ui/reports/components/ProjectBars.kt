@@ -1,6 +1,7 @@
 package com.drklo.pomodoro.ui.reports.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -20,8 +25,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.drklo.pomodoro.R
 import com.drklo.pomodoro.ui.reports.ProjectValue
+import kotlin.math.roundToInt
 
-/** Horizontal bars of per-project value within a window (C1). */
+/** Horizontal bars of per-project value within a window (C1); tap a row to inspect it. */
 @Composable
 fun ProjectBars(
     values: List<ProjectValue>,
@@ -38,39 +44,65 @@ fun ProjectBars(
     }
 
     val max = values.maxOf { it.value }.coerceAtLeast(1f)
+    val total = values.sumOf { it.value.toDouble() }.toFloat()
     val trackColor = MaterialTheme.colorScheme.outlineVariant
+    val highlightColor = MaterialTheme.colorScheme.surfaceVariant
 
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        values.forEach { v ->
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        v.name,
-                        modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Text(valueFormatter(v.value), fontWeight = FontWeight.Medium)
-                }
-                Box(
+    var selectedId by remember { mutableStateOf<Long?>(null) }
+    val selected = values.firstOrNull { it.projectId == selectedId }
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            values.forEach { v ->
+                val isSelected = v.projectId == selectedId
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 4.dp)
-                        .height(10.dp)
-                        .clip(RoundedCornerShape(5.dp))
-                        .background(trackColor)
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { selectedId = if (isSelected) null else v.projectId }
+                        .background(if (isSelected) highlightColor else Color.Transparent)
+                        .padding(horizontal = 6.dp, vertical = 4.dp)
                 ) {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            v.name,
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(valueFormatter(v.value), fontWeight = FontWeight.Medium)
+                    }
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(v.value / max)
+                            .fillMaxWidth()
+                            .padding(top = 4.dp)
                             .height(10.dp)
                             .clip(RoundedCornerShape(5.dp))
-                            .background(Color(v.colorArgb))
-                    )
+                            .background(trackColor)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(v.value / max)
+                                .height(10.dp)
+                                .clip(RoundedCornerShape(5.dp))
+                                .background(Color(v.colorArgb))
+                        )
+                    }
                 }
             }
         }
+
+        ChartTooltip(
+            title = selected?.name,
+            focusSec = selected?.focusSec ?: 0,
+            pomodoros = selected?.pomodoros ?: 0,
+            hint = stringResource(R.string.chart_tap_hint_project),
+            note = selected?.let {
+                val share = if (total > 0f) (it.value / total * 100f).roundToInt() else 0
+                stringResource(R.string.chart_share_of_total, share)
+            }
+        )
     }
 }

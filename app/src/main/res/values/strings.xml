@@ -55,6 +55,19 @@
     <string name="prev_month">last month</string>
     <string name="prev_period">previous period</string>
 
+    <!-- Chart selection (tap to inspect) -->
+    <plurals name="pomodoros_count">
+        <item quantity="one">%d pomodoro</item>
+        <item quantity="other">%d pomodoros</item>
+    </plurals>
+    <string name="chart_metrics">%1$s · %2$s</string>
+    <string name="chart_tap_hint_bar">Tap a bar for details</string>
+    <string name="chart_tap_hint_slice">Tap a slice for details</string>
+    <string name="chart_tap_hint_project">Tap a project for details</string>
+    <string name="chart_tap_hint_day">Tap a day for details</string>
+    <string name="chart_share_of_total">%d%% of the period</string>
+    <string name="chart_goal_progress">Goal: %1$d of %2$d</string>
+
     <!-- Settings -->
     <string name="title_settings">Settings</string>
     <string name="section_projects">Projects</string>

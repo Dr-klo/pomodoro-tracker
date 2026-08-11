@@ -55,6 +55,21 @@
     <string name="prev_month">в прошлом месяце</string>
     <string name="prev_period">прошлый период</string>
 
+    <!-- Выбор на графике (тап для деталей) -->
+    <plurals name="pomodoros_count">
+        <item quantity="one">%d помидорка</item>
+        <item quantity="few">%d помидорки</item>
+        <item quantity="many">%d помидорок</item>
+        <item quantity="other">%d помидорки</item>
+    </plurals>
+    <string name="chart_metrics">%1$s · %2$s</string>
+    <string name="chart_tap_hint_bar">Нажмите на столбец для деталей</string>
+    <string name="chart_tap_hint_slice">Нажмите на сектор для деталей</string>
+    <string name="chart_tap_hint_project">Нажмите на проект для деталей</string>
+    <string name="chart_tap_hint_day">Нажмите на день для деталей</string>
+    <string name="chart_share_of_total">%d%% от периода</string>
+    <string name="chart_goal_progress">Цель: %1$d из %2$d</string>
+
     <!-- Settings -->
     <string name="title_settings">Настройки</string>
     <string name="section_projects">Проекты</string>

@@ -56,7 +56,6 @@ fun ReportsScreen(
     val logs by viewModel.logs.collectAsStateWithLifecycle()
     val today by viewModel.today.collectAsStateWithLifecycle()
     val projects by viewModel.projects.collectAsStateWithLifecycle()
-    val projectColors by viewModel.projectColors.collectAsStateWithLifecycle()
     var tab by remember { mutableIntStateOf(0) }
 
     Scaffold(
@@ -100,7 +99,7 @@ fun ReportsScreen(
                                 formatFocus(summary.weekFocusSec, hLabel, mLabel)
                             )
                         ) {
-                            WeekJournal(logs = logs, today = today, projectColors = projectColors)
+                            WeekJournal(logs = logs, today = today, projects = projects)
                         }
 
                         ChartCard(title = stringResource(R.string.chart_goals_calendar)) {

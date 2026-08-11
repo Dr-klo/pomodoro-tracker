@@ -20,8 +20,24 @@ data class DateBucket(val label: String, val start: LocalDate, val endInclusive:
     fun contains(date: LocalDate): Boolean = !date.isBefore(start) && !date.isAfter(endInclusive)
 }
 
-data class BarSegment(val colorArgb: Int, val value: Float)
-data class BarColumn(val label: String, val segments: List<BarSegment>, val total: Float)
+/** One project's slice of a bar. [value] drives the drawn height; the rest feeds the tooltip. */
+data class BarSegment(
+    val projectId: Long,
+    val name: String,
+    val colorArgb: Int,
+    val value: Float,
+    val focusSec: Int,
+    val pomodoros: Int
+)
+
+data class BarColumn(
+    val label: String,
+    val rangeLabel: String,
+    val segments: List<BarSegment>,
+    val total: Float,
+    val focusSec: Int,
+    val pomodoros: Int
+)
 
 private val dayMonth: DateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM")
 
@@ -86,7 +102,14 @@ fun windowFor(agg: Aggregation, today: LocalDate, page: Int, locale: Locale): Da
     }
 
 /** Per-project aggregated value within a window, sorted descending and filtered to > 0. */
-data class ProjectValue(val projectId: Long, val name: String, val colorArgb: Int, val value: Float)
+data class ProjectValue(
+    val projectId: Long,
+    val name: String,
+    val colorArgb: Int,
+    val value: Float,
+    val focusSec: Int,
+    val pomodoros: Int
+)
 
 fun sumByProject(
     logs: List<PomodoroLog>,
@@ -94,22 +117,34 @@ fun sumByProject(
     projects: List<Project>,
     valueOf: (PomodoroLog) -> Float
 ): List<ProjectValue> {
-    val sums = HashMap<Long, Float>()
+    val sums = HashMap<Long, Metrics>()
     for (log in logs) {
         val date = runCatching { LocalDate.parse(log.dayKey) }.getOrNull() ?: continue
-        if (window.contains(date)) sums[log.projectId] = (sums[log.projectId] ?: 0f) + valueOf(log)
+        if (window.contains(date)) sums.getOrPut(log.projectId) { Metrics() }.add(log, valueOf(log))
     }
     return projects
         .mapNotNull { p ->
-            val v = sums[p.id] ?: 0f
-            if (v > 0f) ProjectValue(p.id, p.name, p.pomodoroColor, v) else null
+            val m = sums[p.id] ?: return@mapNotNull null
+            if (m.value > 0f) {
+                ProjectValue(p.id, p.name, p.pomodoroColor, m.value, m.focusSec, m.pomodoros)
+            } else {
+                null
+            }
         }
         .sortedByDescending { it.value }
 }
 
+/** Focus seconds and pomodoro count for a single logical day, keyed by [PomodoroLog.dayKey]. */
+data class DayMetrics(val focusSec: Int, val pomodoros: Int)
+
+fun metricsByDay(logs: List<PomodoroLog>): Map<String, DayMetrics> =
+    logs.groupBy { it.dayKey }
+        .mapValues { (_, l) -> DayMetrics(l.sumOf { it.durationSeconds }, l.size) }
+
 /**
  * Aggregates [logs] into stacked bars over [buckets], one segment per project (in [projects] order),
- * using [valueOf] per log (e.g. focus seconds or a constant 1 for counts).
+ * using [valueOf] per log (e.g. focus seconds or a constant 1 for counts). Alongside the drawn
+ * value every segment keeps its focus seconds and pomodoro count, so a tapped bar can be explained.
  */
 fun buildStackedBars(
     logs: List<PomodoroLog>,
@@ -117,19 +152,46 @@ fun buildStackedBars(
     projects: List<Project>,
     valueOf: (PomodoroLog) -> Float
 ): List<BarColumn> {
-    // bucketIndex -> projectId -> accumulated value
-    val sums = Array(buckets.size) { HashMap<Long, Float>() }
+    // bucketIndex -> projectId -> accumulated metrics
+    val sums = Array(buckets.size) { HashMap<Long, Metrics>() }
     for (log in logs) {
         val date = runCatching { LocalDate.parse(log.dayKey) }.getOrNull() ?: continue
         val idx = buckets.indexOfFirst { it.contains(date) }
         if (idx < 0) continue
-        sums[idx][log.projectId] = (sums[idx][log.projectId] ?: 0f) + valueOf(log)
+        sums[idx].getOrPut(log.projectId) { Metrics() }.add(log, valueOf(log))
     }
     return buckets.mapIndexed { i, bucket ->
         val perProject = sums[i]
-        val segments = projects
-            .filter { (perProject[it.id] ?: 0f) > 0f }
-            .map { BarSegment(it.pomodoroColor, perProject[it.id] ?: 0f) }
-        BarColumn(bucket.label, segments, perProject.values.sum())
+        val segments = projects.mapNotNull { p ->
+            val m = perProject[p.id] ?: return@mapNotNull null
+            if (m.value <= 0f) null
+            else BarSegment(p.id, p.name, p.pomodoroColor, m.value, m.focusSec, m.pomodoros)
+        }
+        BarColumn(
+            label = bucket.label,
+            rangeLabel = rangeLabelOf(bucket),
+            segments = segments,
+            total = perProject.values.sumOf { it.value.toDouble() }.toFloat(),
+            focusSec = perProject.values.sumOf { it.focusSec },
+            pomodoros = perProject.values.sumOf { it.pomodoros }
+        )
+    }
+}
+
+/** A self-describing label for a bucket, e.g. "Mon, 12.05" or "12.05 – 18.05". */
+private fun rangeLabelOf(bucket: DateBucket): String =
+    if (bucket.start == bucket.endInclusive) "${bucket.label}, ${bucket.start.format(dayMonth)}"
+    else "${bucket.start.format(dayMonth)} – ${bucket.endInclusive.format(dayMonth)}"
+
+/** Mutable accumulator for the three numbers every chart element carries. */
+private class Metrics {
+    var value = 0f
+    var focusSec = 0
+    var pomodoros = 0
+
+    fun add(log: PomodoroLog, drawnValue: Float) {
+        value += drawnValue
+        focusSec += log.durationSeconds
+        pomodoros += 1
     }
 }

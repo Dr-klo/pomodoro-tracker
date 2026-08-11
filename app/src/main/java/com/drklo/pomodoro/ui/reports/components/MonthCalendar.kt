@@ -1,6 +1,8 @@
 package com.drklo.pomodoro.ui.reports.components
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
@@ -19,10 +22,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -35,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import com.drklo.pomodoro.R
 import com.drklo.pomodoro.data.model.PomodoroLog
 import com.drklo.pomodoro.data.model.Project
+import com.drklo.pomodoro.ui.reports.metricsByDay
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -55,6 +61,7 @@ fun MonthCalendar(
 ) {
     val locale = Locale.getDefault()
     var page by remember { mutableIntStateOf(0) }
+    var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
     val month = remember(today, page) { YearMonth.from(today).minusMonths(page.toLong()) }
 
     // dayKey -> projectId -> completed count
@@ -62,6 +69,7 @@ fun MonthCalendar(
         logs.groupBy { it.dayKey }
             .mapValues { (_, l) -> l.groupingBy { it.projectId }.eachCount() }
     }
+    val dayMetrics = remember(logs) { metricsByDay(logs) }
     val goalProjects = remember(projects) { projects.filter { it.dailyGoal > 0 } }
 
     val monthLabel = remember(month, locale) {
@@ -71,11 +79,14 @@ fun MonthCalendar(
     Column(modifier = modifier.fillMaxWidth()) {
         // Month navigation.
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { page += 1 }) {
+            IconButton(onClick = { page += 1; selectedDate = null }) {
                 Icon(Icons.Filled.ChevronLeft, contentDescription = stringResource(R.string.cd_prev))
             }
             Text(monthLabel, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
-            IconButton(onClick = { page = (page - 1).coerceAtLeast(0) }, enabled = page > 0) {
+            IconButton(
+                onClick = { page = (page - 1).coerceAtLeast(0); selectedDate = null },
+                enabled = page > 0
+            ) {
                 Icon(Icons.Filled.ChevronRight, contentDescription = stringResource(R.string.cd_next))
             }
         }
@@ -112,22 +123,66 @@ fun MonthCalendar(
                             val ratios = goalProjects.map { p ->
                                 p.pomodoroColor to ((dayCounts[p.id] ?: 0).toFloat() / p.dailyGoal).coerceIn(0f, 1f)
                             }
-                            DayCell(day = date.dayOfMonth, ratios = ratios, isToday = date == today)
+                            DayCell(
+                                day = date.dayOfMonth,
+                                ratios = ratios,
+                                isToday = date == today,
+                                isSelected = date == selectedDate,
+                                onClick = {
+                                    selectedDate = if (date == selectedDate) null else date
+                                }
+                            )
                         }
                     }
                 }
             }
         }
+
+        val metrics = selectedDate?.let { dayMetrics[it.toString()] }
+        val selectedCounts = selectedDate?.let { counts[it.toString()] }.orEmpty()
+        ChartTooltip(
+            title = selectedDate?.format(dayTitle.withLocale(locale)),
+            focusSec = metrics?.focusSec ?: 0,
+            pomodoros = metrics?.pomodoros ?: 0,
+            hint = stringResource(R.string.chart_tap_hint_day),
+            rows = goalProjects.map { p ->
+                val done = selectedCounts[p.id] ?: 0
+                TooltipRow(
+                    name = "${p.name} · ${stringResource(R.string.chart_goal_progress, done, p.dailyGoal)}",
+                    colorArgb = p.pomodoroColor,
+                    focusSec = logs.filter {
+                        it.projectId == p.id && it.dayKey == selectedDate?.toString()
+                    }.sumOf { it.durationSeconds },
+                    pomodoros = done
+                )
+            }
+        )
     }
 }
 
+private val dayTitle: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE, dd.MM")
+
 @Composable
-private fun DayCell(day: Int, ratios: List<Pair<Int, Float>>, isToday: Boolean) {
+private fun DayCell(
+    day: Int,
+    ratios: List<Pair<Int, Float>>,
+    isToday: Boolean,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
     val trackColor = MaterialTheme.colorScheme.outlineVariant
     val textColor =
         if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+    val highlightColor = MaterialTheme.colorScheme.surfaceVariant
 
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clip(CircleShape)
+            .background(if (isSelected) highlightColor else Color.Transparent)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val stroke = size.minDimension * 0.11f
             val inset = stroke / 2f + 1f

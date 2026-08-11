@@ -16,6 +16,7 @@ import com.drklo.pomodoro.ui.reports.buildStackedBars
 import com.drklo.pomodoro.ui.reports.periodLabel
 import java.time.LocalDate
 import java.util.Locale
+import kotlin.math.roundToInt
 
 /**
  * A stacked bar chart over time with its own Day/Week/Month aggregation and ‹ period › navigation.
@@ -33,6 +34,7 @@ fun PeriodChart(
     val locale = Locale.getDefault()
     var aggregation by remember { mutableStateOf(Aggregation.DAY) }
     var page by remember { mutableIntStateOf(0) }
+    var selected by remember { mutableStateOf<Int?>(null) }
 
     val buckets = remember(aggregation, page, today) { bucketsFor(aggregation, today, page, locale) }
     val bars = remember(logs, buckets, projects) { buildStackedBars(logs, buckets, projects, valueOf) }
@@ -58,11 +60,29 @@ fun PeriodChart(
     ) {
         AggregationBar(
             aggregation = aggregation,
-            onAggregationChange = { aggregation = it; page = 0 },
+            onAggregationChange = { aggregation = it; page = 0; selected = null },
             page = page,
-            onPageChange = { page = it.coerceAtLeast(0) },
+            onPageChange = { page = it.coerceAtLeast(0); selected = null },
             periodLabel = periodLabel(buckets)
         )
-        StackedBarChart(columns = bars)
+        StackedBarChart(
+            columns = bars,
+            selectedIndex = selected?.takeIf { it in bars.indices },
+            onSelect = { selected = it }
+        )
+        val column = selected?.let { bars.getOrNull(it) }
+        ChartTooltip(
+            title = column?.rangeLabel,
+            focusSec = column?.focusSec ?: 0,
+            pomodoros = column?.pomodoros ?: 0,
+            hint = stringResource(R.string.chart_tap_hint_bar),
+            note = column?.let { col ->
+                val share = if (currentTotal > 0f) (col.total / currentTotal * 100f).roundToInt() else 0
+                stringResource(R.string.chart_share_of_total, share)
+            },
+            rows = column?.segments.orEmpty().map {
+                TooltipRow(it.name, it.colorArgb, it.focusSec, it.pomodoros)
+            }
+        )
     }
 }

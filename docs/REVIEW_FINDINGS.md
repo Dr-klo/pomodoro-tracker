@@ -494,7 +494,13 @@ NULL`, тогда как Room для `@PrimaryKey(autoGenerate = true) val id: L
 и дефект всплывёт на чужом устройстве.
 **Почему смешанная уверенность:** отсутствие экспорта схемы — факт; расхождение по `NOT NULL` —
 гипотеза, которую этот же тест и должен подтвердить или снять.
-**Статус:** open
+**Статус:** fixed (W1)
+**Как закрыто:** `exportSchema = true` + `ksp { arg("room.schemaLocation", "$projectDir/schemas") }`;
+`app/schemas/…/2.json` в репозитории, папка подключена в assets `androidTest` — `MigrationTestHelper`
+в W4 теперь возможен. Гипотеза про `NOT NULL` **не подтвердилась**: в эталонной схеме колонка
+объявлена как ``id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL` — ровно как в `MIGRATION_1_2`,
+расхождения нет. Схема v1 не экспортирована (её уже неоткуда взять), поэтому тестируемы миграции
+начиная с v2→v3.
 
 ### F-R2-06 · P3 · CONFIRMED
 **Файл:** `PomodoroApp.kt:19-21`, `data/repository/ProjectRepository.kt:30`

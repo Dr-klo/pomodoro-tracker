@@ -29,6 +29,17 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // The exported schemas are the reference migrations are checked against, so they are versioned.
+    sourceSets {
+        // MigrationTestHelper reads them from the test APK's assets.
+        getByName("androidTest").assets.srcDir("$projectDir/schemas")
+    }
+
+    testOptions {
+        // Unit tests touch pure logic only; stubbed android.* calls return defaults instead of throwing.
+        unitTests.isReturnDefaultValues = true
+    }
+
     signingConfigs {
         if (keystorePropsFile.exists()) {
             create("release") {
@@ -78,6 +89,10 @@ android {
     }
 }
 
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 // Catches what Android Lint does not: complexity, long methods, duplication, formatting.
 // `detekt-formatting` wraps ktlint, so no separate formatting plugin is needed.
 detekt {
@@ -85,6 +100,9 @@ detekt {
     config.setFrom(rootProject.file("config/detekt.yml"))
     baseline = file("detekt-baseline.xml")
 }
+
+// The plain `detekt` task looks at production code only; test code is held to the same bar.
+tasks.named("check") { dependsOn("detektDebugUnitTest") }
 
 dependencies {
     detektPlugins(libs.detekt.formatting)
@@ -112,4 +130,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     debugImplementation(libs.androidx.ui.tooling)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

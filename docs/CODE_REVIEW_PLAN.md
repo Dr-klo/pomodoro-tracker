@@ -243,7 +243,7 @@ dependencies { detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23
 проверяемым. Сейчас в проекте **нет ни одного теста** (`app/src/` содержит только `main`,
 тестовых зависимостей нет), при этом `testInstrumentationRunner` в `defaultConfig` уже объявлен.
 
-### T1 — Инфраструктура + чистая логика (делать до R1, без правок продакшн-кода)
+### T1 — Инфраструктура + чистая логика ✅ выполнено в W1 (без правок продакшн-кода)
 
 Добавить в каталог версий и `app/build.gradle.kts`:
 
@@ -333,10 +333,19 @@ interface TimeSource {
 **Готово, когда:** `:app:lintDebug` зелёный при `warningsAsErrors = true`, detekt проходит,
 `:app:assembleDebug` без предупреждений.
 
-## W1 — Фундамент проверяемости
+## W1 — Фундамент проверяемости ✅ выполнено 12.08.2026
 
-**Находки:** F-R2-05 · **плюс шаг T1**
+**Находки:** F-R2-05 (закрыта) · **плюс шаг T1** (выполнен)
 **Зависимости:** W0 (чтобы новые файлы сразу проходили статику).
+
+**Сделано:** схема экспортируется (`app/schemas/…/2.json` в репозитории, папка подключена в assets
+`androidTest`); тестовый source set с JUnit 4.13.2 и `kotlinx-coroutines-test`;
+**34 теста** в четырёх классах — `BucketsTest` (границы бакетов, непересекающиеся страницы,
+високосный февраль), `AggregationTest` (суммы, порядок сегментов, битый `dayKey`, метки диапазонов,
+`sumByProject`, `metricsByDay`), `LogicalDayTest` (граница конца дня, зажим неверных значений),
+`FormatTest`. `detektDebugUnitTest` подвешен к `check`: тестовый код проходит ту же статику.
+Побочный результат: гипотеза F-R2-05 про `NOT NULL` в `MIGRATION_1_2` **снята** — эталонная схема
+совпадает с SQL миграции.
 
 `exportSchema = true` + `room.schemaLocation`, схема версии 2 в репозиторий. Тестовый source set,
 JUnit + `kotlinx-coroutines-test`, `testOptions { unitTests.isReturnDefaultValues = true }`.

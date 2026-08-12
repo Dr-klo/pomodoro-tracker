@@ -92,6 +92,9 @@ $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
 .\gradlew.bat :app:assembleDebug
 # -> app\build\outputs\apk\debug\app-debug.apk
 
+# Checks: unit tests, Android Lint, detekt (production + test sources)
+.\gradlew.bat :app:testDebugUnitTest :app:lintDebug :app:detekt :app:detektDebugUnitTest
+
 # Deploy to the connected device (check it's there first)
 & $adb devices
 & $adb install -r app\build\outputs\apk\debug\app-debug.apk

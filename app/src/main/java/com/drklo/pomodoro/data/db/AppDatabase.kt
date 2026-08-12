@@ -8,7 +8,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 @Database(
     entities = [ProjectEntity::class, DayStatEntity::class, PomodoroLogEntity::class],
     version = 2,
-    exportSchema = false
+    // Schemas are exported to app/schemas and committed: without them migrations cannot be tested.
+    exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun projectDao(): ProjectDao

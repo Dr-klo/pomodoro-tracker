@@ -11,12 +11,12 @@ import com.drklo.pomodoro.data.model.TimerStatus
 import com.drklo.pomodoro.timer.TimerEvent
 import com.drklo.pomodoro.timer.TimerService
 import com.drklo.pomodoro.timer.TimerState
+import com.drklo.pomodoro.util.launchSafely
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
 
@@ -38,7 +38,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     init {
         // Keep the engine's active project in sync with the database: select a default on first
         // run, and re-apply edits (durations/colors) to the active project as they are saved.
-        viewModelScope.launch {
+        launchSafely {
             projects.collect { list ->
                 if (list.isEmpty()) return@collect
                 val active = engine.state.value.project
@@ -49,7 +49,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 }
             }
         }
-        viewModelScope.launch {
+        launchSafely {
             engine.events.collect { event ->
                 if (event is TimerEvent.GoalReached) {
                     _fanfareTrigger.value += 1

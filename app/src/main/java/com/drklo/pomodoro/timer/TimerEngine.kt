@@ -1,10 +1,13 @@
 package com.drklo.pomodoro.timer
 
+import android.util.Log
 import com.drklo.pomodoro.data.LogicalDay
 import com.drklo.pomodoro.data.model.GlobalSettings
 import com.drklo.pomodoro.data.model.Phase
 import com.drklo.pomodoro.data.model.Project
 import com.drklo.pomodoro.data.model.TimerStatus
+import com.drklo.pomodoro.util.loggingExceptionHandler
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -29,7 +32,8 @@ class TimerEngine(
     private val stats: PomodoroStats,
     private val effects: PhaseFeedback,
     private val time: TimeSource,
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope: CoroutineScope =
+        CoroutineScope(SupervisorJob() + Dispatchers.Default + loggingExceptionHandler(TAG))
 ) {
     private val _state = MutableStateFlow(TimerState())
     val state: StateFlow<TimerState> = _state.asStateFlow()
@@ -51,7 +55,9 @@ class TimerEngine(
     private var deadlineElapsed: Long = 0L
 
     init {
-        scope.launch { settingsSource.settings.collect { settings = it } }
+        launchPersisting("observe settings") {
+            settingsSource.settings.collect { settings = it }
+        }
     }
 
     // --- User actions ---------------------------------------------------------------------
@@ -223,16 +229,31 @@ class TimerEngine(
 
     private fun onPhaseComplete() {
         cancelTick()
-        val s = _state.value
-        val project = s.project ?: return
-        val finishedPhase = s.phase
+        val finished = _state.value
+        val project = finished.project ?: return
+        val finishedPhase = finished.phase
+
+        // Read the clock once: the database row and the in-memory counters must not end up
+        // disagreeing about which logical day this phase belongs to.
+        val dayKey = currentDayKey()
+        // A phase that started before the end-of-day boundary and ended after it belongs to the new
+        // day (F-022). Without carrying the counters over, the row lands on the new day while
+        // "today" and the session bullets keep growing yesterday's tally — the main screen and the
+        // reports then disagree for the rest of the night, and the daily goal never fires again.
+        val rolledOverToNewDay = sessionDayKey != null && sessionDayKey != dayKey
+        sessionDayKey = dayKey
+        val s = if (rolledOverToNewDay) {
+            finished.copy(completedToday = 0, completedInSession = 0, pomodorosSinceLongBreak = 0)
+        } else {
+            finished
+        }
 
         if (settings.soundEnabled) effects.playEnd()
         if (settings.vibrateEnabled) effects.vibrate()
         _events.tryEmit(TimerEvent.PhaseFinished(finishedPhase))
 
         val next: TimerState = if (finishedPhase == Phase.POMODORO) {
-            persistCompletedPomodoro(project, durationSeconds = s.totalSeconds)
+            persistCompletedPomodoro(project, dayKey, durationSeconds = s.totalSeconds)
             val newToday = s.completedToday + 1
             val perSession = project.pomodorosPerSession.coerceAtLeast(1)
             val newSession = (s.completedInSession % perSession) + 1
@@ -345,11 +366,25 @@ class TimerEngine(
     private fun currentDayKey(): String =
         LogicalDay.keyFor(time.now(), settings.dayEndHour, settings.dayEndMinute)
 
-    private fun persistCompletedPomodoro(project: Project, durationSeconds: Int) {
-        val dayKey = currentDayKey()
+    /**
+     * Fire-and-forget database work. A failed query costs the user one pomodoro in the history; it
+     * must never cost them the running session, so the failure is logged and the timer carries on.
+     * The engine cannot rely on [scope]'s exception handler for this — the scope is supplied from
+     * outside and may have none.
+     */
+    private fun launchPersisting(what: String, block: suspend () -> Unit) {
+        scope.launch {
+            runCatching { block() }.onFailure { error ->
+                if (error is CancellationException) throw error
+                Log.e(TAG, "Failed to $what", error)
+            }
+        }
+    }
+
+    private fun persistCompletedPomodoro(project: Project, dayKey: String, durationSeconds: Int) {
         val end = time.wallClockMs()
         val start = end - durationSeconds * 1000L
-        scope.launch {
+        launchPersisting("record a completed pomodoro") {
             stats.recordCompletedPomodoro(project.id, dayKey, start, end, durationSeconds)
         }
     }
@@ -357,7 +392,7 @@ class TimerEngine(
     private fun refreshCompletedToday(project: Project) {
         val dayKey = currentDayKey()
         sessionDayKey = dayKey
-        scope.launch {
+        launchPersisting("read today's completed count") {
             val today = stats.completedCount(project.id, dayKey)
             // Restore session bullets from today's completed count so progress survives a restart
             // (PRD: restore the count of completed pomodoros).
@@ -372,6 +407,7 @@ class TimerEngine(
     }
 
     private companion object {
+        const val TAG = "TimerEngine"
         const val IDLE_STROBE_BLINKS = 3
         const val IDLE_STROBE_HALF_MS = 320L
     }

@@ -6,6 +6,7 @@ import com.drklo.pomodoro.data.model.Project
 import com.drklo.pomodoro.data.model.TimerStatus
 import com.drklo.pomodoro.project
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
@@ -248,6 +249,86 @@ class TimerEngineTest {
         assertEquals(3, h.state.completedToday)
         // Four per session: the fourth bullet is still pending, so three are filled.
         assertEquals(3, h.state.completedInSession)
+    }
+
+    @Test
+    fun `a pomodoro that crosses the end-of-day boundary counts towards the new day`() = runTest {
+        // Boundary at 02:00, eight pomodoros already done "yesterday". One more is started at 01:50
+        // and lands at 02:15 — the row goes to the new day, so the counters must go with it.
+        val h = harness(
+            settings = GlobalSettings(dayEndHour = 2),
+            startAt = LocalDateTime.of(2026, 5, 13, 1, 50),
+            stats = FakeStats(mapOf((work.id to "2026-05-12") to 8))
+        )
+        h.engine.setActiveProject(work)
+        runCurrent()
+        assertEquals(8, h.state.completedToday)
+
+        runPomodoro(h)
+
+        assertEquals("2026-05-13", h.stats.records.single().dayKey)
+        assertEquals("today is a new day, not yesterday's ninth", 1, h.state.completedToday)
+        assertEquals(1, h.state.completedInSession)
+        assertEquals(1, h.state.pomodorosSinceLongBreak)
+    }
+
+    @Test
+    fun `the daily goal fires again after the day rolls over`() = runTest {
+        val project = project(id = 3, dailyGoal = 1, focusMinutes = 25)
+        val h = harness(
+            settings = GlobalSettings(dayEndHour = 2),
+            startAt = LocalDateTime.of(2026, 5, 13, 1, 50),
+            stats = FakeStats(mapOf((project.id to "2026-05-12") to 8))
+        )
+        val events = mutableListOf<TimerEvent>()
+        backgroundScope.launch { h.engine.events.collect { events += it } }
+        runCurrent()
+
+        h.engine.setActiveProject(project)
+        runCurrent()
+        runPomodoro(h, project)
+
+        // On yesterday's inflated count the goal would look long since met and stay silent forever.
+        assertEquals(1, events.filterIsInstance<TimerEvent.GoalReached>().size)
+    }
+
+    @Test
+    fun `a pomodoro inside the same day keeps counting up`() = runTest {
+        val h = harness(stats = FakeStats(mapOf((work.id to "2026-05-13") to 3)))
+        h.engine.setActiveProject(work)
+        runCurrent()
+
+        runPomodoro(h)
+
+        assertEquals(4, h.state.completedToday)
+    }
+
+    @Test
+    fun `a database that refuses every query does not stop the timer`() = runTest {
+        // The engine must survive on whatever scope it is handed, so this one has no handler.
+        val engine = TimerEngine(
+            settingsSource = FakeSettings(),
+            stats = BrokenStats(),
+            effects = RecordingFeedback(),
+            time = FakeTimeSource(testScheduler),
+            scope = backgroundScope
+        )
+        runCurrent()
+
+        engine.setActiveProject(work)
+        runCurrent()
+        assertEquals("a failed read must not blank the screen", work.id, engine.state.value.project?.id)
+
+        engine.togglePlayPause()
+        advance(25 * 60_000L)
+
+        // The pomodoro is lost from the history — that is the cost — but the session goes on.
+        assertEquals(Phase.SHORT_BREAK, engine.state.value.phase)
+        assertEquals(1, engine.state.value.completedToday)
+
+        engine.togglePlayPause()
+        advance(5 * 60_000L)
+        assertEquals(Phase.POMODORO, engine.state.value.phase)
     }
 
     @Test

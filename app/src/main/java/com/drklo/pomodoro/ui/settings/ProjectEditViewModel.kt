@@ -3,16 +3,15 @@ package com.drklo.pomodoro.ui.settings
 import android.app.Application
 import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
 import com.drklo.pomodoro.PomodoroApp
 import com.drklo.pomodoro.data.model.Preset
 import com.drklo.pomodoro.data.model.Project
 import com.drklo.pomodoro.ui.theme.DefaultBreakColor
 import com.drklo.pomodoro.ui.theme.DefaultPomodoroColor
+import com.drklo.pomodoro.util.launchSafely
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 
 class ProjectEditViewModel(app: Application) : AndroidViewModel(app) {
 
@@ -27,7 +26,7 @@ class ProjectEditViewModel(app: Application) : AndroidViewModel(app) {
     fun load(projectId: Long) {
         if (loadedFor == projectId && _project.value != null) return
         loadedFor = projectId
-        viewModelScope.launch {
+        launchSafely {
             _project.value = if (projectId >= 0) repo.getById(projectId) ?: blank() else blank()
         }
     }
@@ -47,7 +46,7 @@ class ProjectEditViewModel(app: Application) : AndroidViewModel(app) {
         val sanitized = current.copy(
             name = current.name.trim().ifBlank { "Pomodoro" }
         )
-        viewModelScope.launch {
+        launchSafely {
             if (sanitized.id == 0L) repo.add(sanitized) else repo.update(sanitized)
             onDone()
         }
@@ -58,7 +57,7 @@ class ProjectEditViewModel(app: Application) : AndroidViewModel(app) {
         if (current.id == 0L) {
             onDone(); return
         }
-        viewModelScope.launch {
+        launchSafely {
             repo.delete(current)
             onDone()
         }

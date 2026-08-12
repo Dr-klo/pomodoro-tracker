@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -13,7 +14,9 @@ import com.drklo.pomodoro.data.model.GlobalSettings
 import com.drklo.pomodoro.data.model.ThemeMode
 import com.drklo.pomodoro.timer.SettingsSource
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import java.io.IOException
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
@@ -33,7 +36,12 @@ class SettingsRepository(private val context: Context) : SettingsSource {
         val THEME = stringPreferencesKey("theme_mode")
     }
 
-    override val settings: Flow<GlobalSettings> = context.dataStore.data.map { p ->
+    override val settings: Flow<GlobalSettings> = context.dataStore.data.catch { e ->
+        // A preferences file that cannot be read (corrupted, or the disk is unhappy) must not take
+        // the timer down with it: fall back to defaults so the app keeps running, and let the user
+        // re-set what they need. Anything that is not an I/O problem is a real bug — rethrow it.
+        if (e is IOException) emit(emptyPreferences()) else throw e
+    }.map { p ->
         val defaults = GlobalSettings()
         GlobalSettings(
             soundEnabled = p[Keys.SOUND] ?: defaults.soundEnabled,

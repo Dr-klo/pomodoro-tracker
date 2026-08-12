@@ -75,6 +75,20 @@ class FakeStats(initialCounts: Map<Pair<Long, String>, Int> = emptyMap()) : Pomo
     }
 }
 
+/** Stats that always fail, standing in for a corrupted or unwritable database. */
+class BrokenStats : PomodoroStats {
+    override suspend fun completedCount(projectId: Long, dayKey: String): Int =
+        error("database unavailable")
+
+    override suspend fun recordCompletedPomodoro(
+        projectId: Long,
+        dayKey: String,
+        startEpochMs: Long,
+        endEpochMs: Long,
+        durationSeconds: Int
+    ): Unit = error("database unavailable")
+}
+
 /** Counts the feedback calls so tests can assert a ding happens once, not twice. */
 class RecordingFeedback : PhaseFeedback {
     var starts = 0

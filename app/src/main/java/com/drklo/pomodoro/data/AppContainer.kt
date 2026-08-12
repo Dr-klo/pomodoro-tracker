@@ -23,9 +23,7 @@ class AppContainer(context: Context) {
     ).addMigrations(AppDatabase.MIGRATION_1_2).build()
 
     val projectRepository: ProjectRepository by lazy { ProjectRepository(database.projectDao()) }
-    val statsRepository: StatsRepository by lazy {
-        StatsRepository(database.dayStatDao(), database.pomodoroLogDao())
-    }
+    val statsRepository: StatsRepository by lazy { StatsRepository(database) }
     val settingsRepository: SettingsRepository by lazy { SettingsRepository(context.applicationContext) }
 
     private val timerEffects: TimerEffects by lazy { TimerEffects(context.applicationContext) }

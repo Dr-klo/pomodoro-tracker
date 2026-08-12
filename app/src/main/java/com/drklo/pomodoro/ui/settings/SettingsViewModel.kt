@@ -8,10 +8,10 @@ import com.drklo.pomodoro.data.model.AppLanguage
 import com.drklo.pomodoro.data.model.GlobalSettings
 import com.drklo.pomodoro.data.model.Project
 import com.drklo.pomodoro.data.model.ThemeMode
+import com.drklo.pomodoro.util.launchSafely
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 
 class SettingsViewModel(app: Application) : AndroidViewModel(app) {
 
@@ -25,16 +25,16 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
     val projects: StateFlow<List<Project>> = projectRepo.projects
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    fun setSound(value: Boolean) = viewModelScope.launch { settingsRepo.setSoundEnabled(value) }
-    fun setVibrate(value: Boolean) = viewModelScope.launch { settingsRepo.setVibrateEnabled(value) }
-    fun setAlwaysOn(value: Boolean) = viewModelScope.launch { settingsRepo.setAlwaysOnDisplay(value) }
-    fun setAutostartPomodoros(value: Boolean) = viewModelScope.launch { settingsRepo.setAutostartPomodoros(value) }
-    fun setAutostartBreaks(value: Boolean) = viewModelScope.launch { settingsRepo.setAutostartBreaks(value) }
-    fun setIdleAlertMinutes(value: Int) = viewModelScope.launch { settingsRepo.setIdleAlertMinutes(value) }
-    fun setHoldFinishedPhaseColor(value: Boolean) = viewModelScope.launch { settingsRepo.setHoldFinishedPhaseColor(value) }
-    fun setDayEnd(hour: Int, minute: Int) = viewModelScope.launch { settingsRepo.setDayEnd(hour, minute) }
-    fun setLanguage(language: AppLanguage) = viewModelScope.launch { settingsRepo.setLanguage(language) }
-    fun setThemeMode(mode: ThemeMode) = viewModelScope.launch { settingsRepo.setThemeMode(mode) }
+    fun setSound(value: Boolean) = launchSafely { settingsRepo.setSoundEnabled(value) }
+    fun setVibrate(value: Boolean) = launchSafely { settingsRepo.setVibrateEnabled(value) }
+    fun setAlwaysOn(value: Boolean) = launchSafely { settingsRepo.setAlwaysOnDisplay(value) }
+    fun setAutostartPomodoros(value: Boolean) = launchSafely { settingsRepo.setAutostartPomodoros(value) }
+    fun setAutostartBreaks(value: Boolean) = launchSafely { settingsRepo.setAutostartBreaks(value) }
+    fun setIdleAlertMinutes(value: Int) = launchSafely { settingsRepo.setIdleAlertMinutes(value) }
+    fun setHoldFinishedPhaseColor(value: Boolean) = launchSafely { settingsRepo.setHoldFinishedPhaseColor(value) }
+    fun setDayEnd(hour: Int, minute: Int) = launchSafely { settingsRepo.setDayEnd(hour, minute) }
+    fun setLanguage(language: AppLanguage) = launchSafely { settingsRepo.setLanguage(language) }
+    fun setThemeMode(mode: ThemeMode) = launchSafely { settingsRepo.setThemeMode(mode) }
 
-    fun deleteProject(project: Project) = viewModelScope.launch { projectRepo.delete(project) }
+    fun deleteProject(project: Project) = launchSafely { projectRepo.delete(project) }
 }

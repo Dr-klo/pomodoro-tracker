@@ -11,12 +11,13 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.drklo.pomodoro.data.model.AppLanguage
 import com.drklo.pomodoro.data.model.GlobalSettings
 import com.drklo.pomodoro.data.model.ThemeMode
+import com.drklo.pomodoro.timer.SettingsSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
-class SettingsRepository(private val context: Context) {
+class SettingsRepository(private val context: Context) : SettingsSource {
 
     private object Keys {
         val SOUND = booleanPreferencesKey("sound_enabled")
@@ -32,7 +33,7 @@ class SettingsRepository(private val context: Context) {
         val THEME = stringPreferencesKey("theme_mode")
     }
 
-    val settings: Flow<GlobalSettings> = context.dataStore.data.map { p ->
+    override val settings: Flow<GlobalSettings> = context.dataStore.data.map { p ->
         val defaults = GlobalSettings()
         GlobalSettings(
             soundEnabled = p[Keys.SOUND] ?: defaults.soundEnabled,

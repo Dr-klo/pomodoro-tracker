@@ -6,6 +6,7 @@ import com.drklo.pomodoro.data.db.AppDatabase
 import com.drklo.pomodoro.data.repository.ProjectRepository
 import com.drklo.pomodoro.data.repository.SettingsRepository
 import com.drklo.pomodoro.data.repository.StatsRepository
+import com.drklo.pomodoro.timer.SystemTimeSource
 import com.drklo.pomodoro.timer.TimerEffects
 import com.drklo.pomodoro.timer.TimerEngine
 
@@ -31,6 +32,6 @@ class AppContainer(context: Context) {
 
     /** The single, app-wide timer instance (guarantees one active timer, F-003). */
     val timerEngine: TimerEngine by lazy {
-        TimerEngine(settingsRepository, statsRepository, timerEffects)
+        TimerEngine(settingsRepository, statsRepository, timerEffects, SystemTimeSource)
     }
 }

@@ -1,13 +1,10 @@
 package com.drklo.pomodoro.timer
 
-import android.os.SystemClock
 import com.drklo.pomodoro.data.LogicalDay
 import com.drklo.pomodoro.data.model.GlobalSettings
 import com.drklo.pomodoro.data.model.Phase
 import com.drklo.pomodoro.data.model.Project
 import com.drklo.pomodoro.data.model.TimerStatus
-import com.drklo.pomodoro.data.repository.SettingsRepository
-import com.drklo.pomodoro.data.repository.StatsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -28,9 +25,10 @@ import kotlin.math.ceil
  * foreground service merely observe [state] and forward user actions.
  */
 class TimerEngine(
-    private val settingsRepository: SettingsRepository,
-    private val statsRepository: StatsRepository,
-    private val effects: TimerEffects,
+    private val settingsSource: SettingsSource,
+    private val stats: PomodoroStats,
+    private val effects: PhaseFeedback,
+    private val time: TimeSource,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
     private val _state = MutableStateFlow(TimerState())
@@ -53,7 +51,7 @@ class TimerEngine(
     private var deadlineElapsed: Long = 0L
 
     init {
-        scope.launch { settingsRepository.settings.collect { settings = it } }
+        scope.launch { settingsSource.settings.collect { settings = it } }
     }
 
     // --- User actions ---------------------------------------------------------------------
@@ -165,7 +163,7 @@ class TimerEngine(
         val target = (fraction.coerceIn(0f, 1f) * s.totalSeconds).toInt().coerceIn(1, s.totalSeconds)
         when (s.status) {
             TimerStatus.RUNNING -> {
-                deadlineElapsed = SystemClock.elapsedRealtime() + target * 1000L
+                deadlineElapsed = time.elapsedRealtimeMs() + target * 1000L
                 _state.update { it.copy(remainingSeconds = target) }
             }
             TimerStatus.PAUSED, TimerStatus.IDLE ->
@@ -199,7 +197,7 @@ class TimerEngine(
         val s = _state.value
         if (s.project == null || s.remainingSeconds <= 0) return
         stopIdleAlert()
-        deadlineElapsed = SystemClock.elapsedRealtime() + s.remainingSeconds * 1000L
+        deadlineElapsed = time.elapsedRealtimeMs() + s.remainingSeconds * 1000L
         _state.update { it.copy(status = TimerStatus.RUNNING, awaitingNext = false, idleAlertActive = false) }
         if (userInitiated && settings.soundEnabled) effects.playStart()
         if (userInitiated && settings.vibrateEnabled) effects.vibrate()
@@ -218,7 +216,7 @@ class TimerEngine(
     private fun resume() {
         stopIdleAlert()
         val s = _state.value
-        deadlineElapsed = SystemClock.elapsedRealtime() + s.remainingSeconds * 1000L
+        deadlineElapsed = time.elapsedRealtimeMs() + s.remainingSeconds * 1000L
         _state.update { it.copy(status = TimerStatus.RUNNING) }
         startTicking()
     }
@@ -303,7 +301,7 @@ class TimerEngine(
     }
 
     private fun remainingFromDeadline(): Int {
-        val remainingMs = deadlineElapsed - SystemClock.elapsedRealtime()
+        val remainingMs = deadlineElapsed - time.elapsedRealtimeMs()
         return ceil(remainingMs / 1000.0).toInt().coerceAtLeast(0)
     }
 
@@ -345,14 +343,14 @@ class TimerEngine(
     // --- Stats ----------------------------------------------------------------------------
 
     private fun currentDayKey(): String =
-        LogicalDay.keyFor(dayEndHour = settings.dayEndHour, dayEndMinute = settings.dayEndMinute)
+        LogicalDay.keyFor(time.now(), settings.dayEndHour, settings.dayEndMinute)
 
     private fun persistCompletedPomodoro(project: Project, durationSeconds: Int) {
         val dayKey = currentDayKey()
-        val end = System.currentTimeMillis()
+        val end = time.wallClockMs()
         val start = end - durationSeconds * 1000L
         scope.launch {
-            statsRepository.recordCompletedPomodoro(project.id, dayKey, start, end, durationSeconds)
+            stats.recordCompletedPomodoro(project.id, dayKey, start, end, durationSeconds)
         }
     }
 
@@ -360,7 +358,7 @@ class TimerEngine(
         val dayKey = currentDayKey()
         sessionDayKey = dayKey
         scope.launch {
-            val today = statsRepository.completedCount(project.id, dayKey)
+            val today = stats.completedCount(project.id, dayKey)
             // Restore session bullets from today's completed count so progress survives a restart
             // (PRD: restore the count of completed pomodoros).
             val perSession = project.pomodorosPerSession.coerceAtLeast(1)

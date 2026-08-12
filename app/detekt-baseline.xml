@@ -218,7 +218,7 @@
     <ID>ReturnCount:MainViewModel.kt$MainViewModel$fun onSelectProject(index: Int)</ID>
     <ID>ReturnCount:TimerEngine.kt$TimerEngine$fun refreshForNewDayIfNeeded()</ID>
     <ID>SpacingBetweenDeclarationsWithComments:TimerEvent.kt$TimerEvent.GoalReached$/** Daily goal for [projectId] was just reached — triggers the fanfare animation (F-014). */</ID>
-    <ID>TooManyFunctions:SettingsRepository.kt$SettingsRepository</ID>
+    <ID>TooManyFunctions:SettingsRepository.kt$SettingsRepository : SettingsSource</ID>
     <ID>TooManyFunctions:SettingsViewModel.kt$SettingsViewModel : AndroidViewModel</ID>
     <ID>TooManyFunctions:TimerEngine.kt$TimerEngine</ID>
     <ID>Wrapping:MonthCalendar.kt$;</ID>

@@ -13,7 +13,7 @@ import java.io.File
  * Sound and vibration feedback for phase boundaries (global settings F-010, F-016).
  * Plays crisp "ding" tones synthesized at runtime by [ToneSynth] (no bundled audio assets).
  */
-class TimerEffects(context: Context) {
+class TimerEffects(context: Context) : PhaseFeedback {
 
     private val appContext = context.applicationContext
 
@@ -60,17 +60,23 @@ class TimerEffects(context: Context) {
         }
     }
 
-    fun playStart() {
+    override fun playStart() {
         if (startSoundId != 0) soundPool.play(startSoundId, 1f, 1f, 1, 0, 1f)
     }
 
-    fun playEnd() {
+    override fun playEnd() {
         if (endSoundId != 0) soundPool.play(endSoundId, 1f, 1f, 1, 0, 1f)
     }
 
-    fun vibrate(durationMs: Long = 400) {
+    override fun vibrate() = vibrate(DEFAULT_VIBRATION_MS)
+
+    fun vibrate(durationMs: Long) {
         val v = vibrator ?: return
         if (!v.hasVibrator()) return
         v.vibrate(VibrationEffect.createOneShot(durationMs, VibrationEffect.DEFAULT_AMPLITUDE))
+    }
+
+    private companion object {
+        const val DEFAULT_VIBRATION_MS = 400L
     }
 }

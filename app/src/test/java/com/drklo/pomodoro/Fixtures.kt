@@ -7,24 +7,31 @@ import com.drklo.pomodoro.data.model.Project
  * Minimal builders so a test states only the fields it actually reasons about. Everything else
  * gets a neutral default — a test that mentions a number is a test that depends on it.
  */
+@Suppress("LongParameterList")
 fun project(
     id: Long,
     name: String = "P$id",
     color: Int = 0xFF000000.toInt() + id.toInt(),
     dailyGoal: Int = 0,
-    orderIndex: Int = id.toInt()
+    orderIndex: Int = id.toInt(),
+    focusMinutes: Int = 25,
+    shortBreakMinutes: Int = 5,
+    pomodorosPerSession: Int = 4,
+    longBreakEnabled: Boolean = false,
+    longBreakMinutes: Int = 15,
+    longBreakInterval: Int = 4
 ) = Project(
     id = id,
     name = name,
-    focusMinutes = 25,
-    shortBreakMinutes = 5,
-    pomodorosPerSession = 4,
+    focusMinutes = focusMinutes,
+    shortBreakMinutes = shortBreakMinutes,
+    pomodorosPerSession = pomodorosPerSession,
     pomodoroColor = color,
     breakColor = color,
     dailyGoal = dailyGoal,
-    longBreakEnabled = false,
-    longBreakMinutes = 15,
-    longBreakInterval = 4,
+    longBreakEnabled = longBreakEnabled,
+    longBreakMinutes = longBreakMinutes,
+    longBreakInterval = longBreakInterval,
     orderIndex = orderIndex
 )
 

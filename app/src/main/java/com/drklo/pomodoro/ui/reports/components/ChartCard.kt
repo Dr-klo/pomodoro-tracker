@@ -15,8 +15,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun ChartCard(
     title: String,
-    subtitle: String? = null,
     modifier: Modifier = Modifier,
+    subtitle: String? = null,
     content: @Composable () -> Unit
 ) {
     ElevatedCard(modifier = modifier.fillMaxWidth()) {

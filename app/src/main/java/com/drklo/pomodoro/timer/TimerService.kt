@@ -7,7 +7,6 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.drklo.pomodoro.MainActivity
@@ -117,17 +116,15 @@ class TimerService : Service() {
     }
 
     private fun createChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                getString(R.string.timer_channel_name),
-                NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = getString(R.string.timer_channel_desc)
-                setShowBadge(false)
-            }
-            notificationManager().createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            getString(R.string.timer_channel_name),
+            NotificationManager.IMPORTANCE_LOW
+        ).apply {
+            description = getString(R.string.timer_channel_desc)
+            setShowBadge(false)
         }
+        notificationManager().createNotificationChannel(channel)
     }
 
     private fun notificationManager(): NotificationManager =
@@ -140,12 +137,7 @@ class TimerService : Service() {
         private const val ACTION_RESET = "com.drklo.pomodoro.action.RESET"
 
         fun start(context: Context) {
-            val intent = Intent(context, TimerService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
-            }
+            context.startForegroundService(Intent(context, TimerService::class.java))
         }
 
         fun stop(context: Context) {

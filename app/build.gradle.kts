@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.detekt)
 }
 
 // Release signing config is read from keystore.properties (kept out of version control).
@@ -55,13 +56,39 @@ android {
     }
     kotlinOptions {
         jvmTarget = "17"
+        // Warnings must not accumulate: every one of them is either fixed or explicitly suppressed.
+        allWarningsAsErrors = true
     }
     buildFeatures {
         compose = true
     }
+
+    lint {
+        // Anything new fails the build; the few accepted leftovers live in the baseline.
+        warningsAsErrors = true
+        checkDependencies = true
+        baseline = file("lint-baseline.xml")
+        disable += setOf(
+            // Dependency freshness is a deliberate, separate chore — not a per-build gate.
+            "GradleDependency",
+            "AndroidGradlePluginVersion",
+            // The app ships as a plain APK, never as an AAB, so language splits cannot happen.
+            "AppBundleLocaleChanges"
+        )
+    }
+}
+
+// Catches what Android Lint does not: complexity, long methods, duplication, formatting.
+// `detekt-formatting` wraps ktlint, so no separate formatting plugin is needed.
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(rootProject.file("config/detekt.yml"))
+    baseline = file("detekt-baseline.xml")
 }
 
 dependencies {
+    detektPlugins(libs.detekt.formatting)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)

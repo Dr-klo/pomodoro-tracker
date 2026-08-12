@@ -1,0 +1,12 @@
+# Overrides on top of detekt's default config (buildUponDefaultConfig = true).
+# Keep this file small: every entry must be a deliberate decision, not a way to silence real debt.
+
+naming:
+  FunctionNaming:
+    # Composables are PascalCase by convention — that is the Compose API guideline, not a violation.
+    ignoreAnnotated: ['Composable']
+
+complexity:
+  LongMethod:
+    # Composable layout functions are long by nature: they describe a tree, not an algorithm.
+    ignoreAnnotated: ['Composable']

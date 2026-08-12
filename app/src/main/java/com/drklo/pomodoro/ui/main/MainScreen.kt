@@ -187,7 +187,8 @@ fun MainScreen(
         }
 
         // Bookmark for the paused project (bottom-right, sticks out from the edge).
-        if (showBookmark && pausedProject != null) {
+        // `showBookmark` already implies a non-null paused project, hence no second check.
+        if (showBookmark) {
             PausedBookmark(
                 color = Color(pausedProject.pomodoroColor),
                 timeText = formatMmSs(state.remainingSeconds),

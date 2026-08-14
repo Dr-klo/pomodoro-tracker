@@ -502,6 +502,32 @@ T4 — тест миграции v2→v3 через `MigrationTestHelper`; за�
 
 Инструменты, отработанные в этой сессии. Использовать при проверке пакетов, не изобретать заново.
 
+## ⚠️ Инструментальные тесты стирают данные на устройстве
+
+`:app:connectedDebugAndroidTest` после прогона **деинсталлирует** и приложение, и тестовый APK —
+штатное поведение AGP. Вместе с APK Android удаляет данные: база помидорок и DataStore-настройки
+исчезают. Проверено на практике 14.08.2026: потеряли боевую базу, восстановили из снятого за пять
+минут до этого снимка.
+
+Правило: **перед `connectedAndroidTest` на телефоне с боевыми данными — обязательный бэкап.**
+
+```powershell
+# Снять (bash, не PowerShell: PS портит бинарный поток при редиректе)
+adb exec-out run-as com.drklo.pomodoro cat databases/pomodoro.db > backup.db
+adb exec-out run-as com.drklo.pomodoro cat databases/pomodoro.db-wal > backup.db-wal
+adb exec-out run-as com.drklo.pomodoro cat files/datastore/settings.preferences_pb > backup.pb
+
+# Склеить WAL в самодостаточный файл: python -c "sqlite3.connect('backup.db').execute(\"VACUUM INTO 'restore.db'\")"
+
+# Вернуть (после переустановки и одного запуска, чтобы создались каталоги)
+adb shell am force-stop com.drklo.pomodoro
+adb push restore.db /data/local/tmp/restore.db
+adb shell run-as com.drklo.pomodoro cp /data/local/tmp/restore.db databases/pomodoro.db
+adb shell run-as com.drklo.pomodoro rm -f databases/pomodoro.db-wal databases/pomodoro.db-shm
+```
+
+Лучший вариант — гонять инструментальные тесты на эмуляторе, а телефон держать для ручных сценариев.
+
 **Сборка и установка** (`$env:JAVA_HOME` — JBR из Android Studio):
 `.\gradlew.bat :app:assembleDebug` → `adb install -r app\build\outputs\apk\debug\app-debug.apk`.
 

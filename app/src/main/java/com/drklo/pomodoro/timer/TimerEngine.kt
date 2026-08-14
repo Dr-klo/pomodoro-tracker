@@ -82,6 +82,20 @@ class TimerEngine(
     }
 
     /**
+     * The active project was archived out from under the session (F-R5-01) — switch to
+     * [replacement]. Unlike [setActiveProject] this cannot be refused, because leaving the timer
+     * pointed at a project that is gone locks the screen: no carousel page matches it, so play,
+     * reset and swipe all stop responding. The unfinished interval is lost on purpose; it does not
+     * survive a process death either.
+     */
+    fun onActiveProjectArchived(replacement: Project) {
+        cancelTick()
+        stopIdleAlert()
+        _state.value = TimerState()
+        setActiveProject(replacement)
+    }
+
+    /**
      * Re-applies edited data for the currently active project (e.g. changed durations/colors)
      * without resetting session progress. Adopts a new duration only when idle; a paused interval
      * keeps its remaining time.

@@ -36,5 +36,6 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
     fun setLanguage(language: AppLanguage) = launchSafely { settingsRepo.setLanguage(language) }
     fun setThemeMode(mode: ThemeMode) = launchSafely { settingsRepo.setThemeMode(mode) }
 
-    fun deleteProject(project: Project) = launchSafely { projectRepo.delete(project) }
+    /** Soft delete: the project leaves the list, its pomodoros stay in the reports. */
+    fun deleteProject(project: Project) = launchSafely { projectRepo.archive(project) }
 }

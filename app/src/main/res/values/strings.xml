@@ -116,4 +116,11 @@
     <string name="label_long_break_minutes">Long break length</string>
     <string name="label_long_break_interval">After N pomodoros</string>
     <string name="action_save">Save</string>
+    <!-- Deleting a project: soft delete, so the dialog promises the history stays. -->
+    <string name="dialog_delete_project_title">Delete project?</string>
+    <string name="dialog_delete_project_text">“%1$s” will disappear from the carousel and the list. The pomodoros already completed stay in the reports.</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
+    <!-- Shown while the first launch is still seeding the default projects. -->
+    <string name="empty_no_projects">No projects yet</string>
 </resources>

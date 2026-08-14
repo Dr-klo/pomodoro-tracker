@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -44,6 +45,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -60,12 +64,9 @@ import com.drklo.pomodoro.ui.main.components.SessionBullets
 import com.drklo.pomodoro.ui.main.components.TimerDial
 import com.drklo.pomodoro.ui.theme.DefaultPomodoroColor
 import com.drklo.pomodoro.util.findActivity
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 
 /** Hide the system bars after this much inactivity on the main screen. */
@@ -115,7 +116,13 @@ fun MainScreen(
         onDispose { insetsController?.show(WindowInsetsCompat.Type.systemBars()) }
     }
 
-    if (projects.isEmpty()) return
+    // Deleting the last project is refused, so an empty list only happens in the sliver before the
+    // first-run seeding lands. Even then the screen must stay usable: a blank frame with no controls
+    // used to be a dead end, escapable only by restarting the app.
+    if (projects.isEmpty()) {
+        EmptyProjects(onOpenSettings = onOpenSettings)
+        return
+    }
 
     val isRunning = state.status == TimerStatus.RUNNING
     val canSwipe = state.status == TimerStatus.IDLE || state.status == TimerStatus.PAUSED
@@ -233,6 +240,35 @@ fun MainScreen(
         }
 
         Fanfare(trigger = fanfareTrigger, modifier = Modifier.fillMaxSize())
+    }
+}
+
+/** Placeholder shown while there is no project to draw — never a blank, uncontrollable screen. */
+@Composable
+private fun EmptyProjects(onOpenSettings: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
+    ) {
+        Text(
+            text = stringResource(R.string.empty_no_projects),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.align(Alignment.Center)
+        )
+        IconButton(
+            onClick = onOpenSettings,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .statusBarsPadding()
+                .padding(4.dp)
+        ) {
+            Icon(
+                Icons.Filled.Menu,
+                contentDescription = stringResource(R.string.cd_settings),
+                tint = MaterialTheme.colorScheme.onSurface
+            )
+        }
     }
 }
 

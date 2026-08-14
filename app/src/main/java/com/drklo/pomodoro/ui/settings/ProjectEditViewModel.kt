@@ -58,7 +58,7 @@ class ProjectEditViewModel(app: Application) : AndroidViewModel(app) {
             onDone(); return
         }
         launchSafely {
-            repo.delete(current)
+            repo.archive(current)
             onDone()
         }
     }

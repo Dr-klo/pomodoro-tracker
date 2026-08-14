@@ -17,7 +17,13 @@ data class ProjectEntity(
     val longBreakEnabled: Boolean,
     val longBreakMinutes: Int,
     val longBreakInterval: Int,
-    val orderIndex: Int
+    val orderIndex: Int,
+    /**
+     * When the user removed the project, or null while it is active. Archived projects leave the
+     * carousel and the settings list but keep their row, so the pomodoros they own stay attributable
+     * in the reports — history must survive a deletion (owner's decision, F-R2-01).
+     */
+    val archivedAt: Long? = null
 )
 
 fun ProjectEntity.toDomain() = Project(
@@ -32,7 +38,8 @@ fun ProjectEntity.toDomain() = Project(
     longBreakEnabled = longBreakEnabled,
     longBreakMinutes = longBreakMinutes,
     longBreakInterval = longBreakInterval,
-    orderIndex = orderIndex
+    orderIndex = orderIndex,
+    archivedAt = archivedAt
 )
 
 fun Project.toEntity() = ProjectEntity(
@@ -47,5 +54,6 @@ fun Project.toEntity() = ProjectEntity(
     longBreakEnabled = longBreakEnabled,
     longBreakMinutes = longBreakMinutes,
     longBreakInterval = longBreakInterval,
-    orderIndex = orderIndex
+    orderIndex = orderIndex,
+    archivedAt = archivedAt
 )

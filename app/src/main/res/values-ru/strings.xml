@@ -116,4 +116,11 @@
     <string name="label_long_break_minutes">Длительность длинной паузы</string>
     <string name="label_long_break_interval">После N помидорок</string>
     <string name="action_save">Сохранить</string>
+    <!-- Deleting a project: soft delete, so the dialog promises the history stays. -->
+    <string name="dialog_delete_project_title">Удалить проект?</string>
+    <string name="dialog_delete_project_text">«%1$s» исчезнет из карусели и списка. Уже сделанные помидорки останутся в отчётах.</string>
+    <string name="action_delete">Удалить</string>
+    <string name="action_cancel">Отмена</string>
+    <!-- Shown while the first launch is still seeding the default projects. -->
+    <string name="empty_no_projects">Пока нет проектов</string>
 </resources>

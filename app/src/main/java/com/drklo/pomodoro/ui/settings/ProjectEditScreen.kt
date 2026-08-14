@@ -30,6 +30,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +45,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.drklo.pomodoro.R
 import com.drklo.pomodoro.data.model.Preset
+import com.drklo.pomodoro.ui.common.ConfirmDeleteProjectDialog
 import com.drklo.pomodoro.ui.common.Stepper
 
 private val ColorPalette = listOf(
@@ -67,6 +71,18 @@ fun ProjectEditScreen(
 ) {
     LaunchedEffect(projectId) { viewModel.load(projectId) }
     val project by viewModel.project.collectAsStateWithLifecycle()
+    var confirmDelete by remember { mutableStateOf(false) }
+
+    if (confirmDelete) {
+        ConfirmDeleteProjectDialog(
+            projectName = project?.name.orEmpty(),
+            onConfirm = {
+                confirmDelete = false
+                viewModel.delete(onDone)
+            },
+            onDismiss = { confirmDelete = false }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -85,7 +101,7 @@ fun ProjectEditScreen(
                 },
                 actions = {
                     if (!viewModel.isNew) {
-                        IconButton(onClick = { viewModel.delete(onDone) }) {
+                        IconButton(onClick = { confirmDelete = true }) {
                             Icon(Icons.Filled.Delete, stringResource(R.string.cd_delete))
                         }
                     }

@@ -20,9 +20,9 @@ class AppContainer(context: Context) {
         context.applicationContext,
         AppDatabase::class.java,
         AppDatabase.NAME
-    ).addMigrations(AppDatabase.MIGRATION_1_2).build()
+    ).addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3).build()
 
-    val projectRepository: ProjectRepository by lazy { ProjectRepository(database.projectDao()) }
+    val projectRepository: ProjectRepository by lazy { ProjectRepository(database) }
     val statsRepository: StatsRepository by lazy { StatsRepository(database) }
     val settingsRepository: SettingsRepository by lazy { SettingsRepository(context.applicationContext) }
 

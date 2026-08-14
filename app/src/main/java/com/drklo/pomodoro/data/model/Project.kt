@@ -25,8 +25,13 @@ data class Project(
     /** Number of pomodoros after which a long break replaces the short one. */
     val longBreakInterval: Int,
     /** Position in the carousel. */
-    val orderIndex: Int
+    val orderIndex: Int,
+    /** Set when the project was removed; archived projects live on in the reports only. */
+    val archivedAt: Long? = null
 ) {
+
+    val isArchived: Boolean get() = archivedAt != null
+
     /** Duration in seconds for the given phase of this project. */
     fun durationSecondsFor(phase: Phase): Int = when (phase) {
         Phase.POMODORO -> focusMinutes * 60

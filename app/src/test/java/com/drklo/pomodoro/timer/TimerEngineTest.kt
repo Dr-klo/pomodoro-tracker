@@ -332,6 +332,43 @@ class TimerEngineTest {
     }
 
     @Test
+    fun `archiving the active project moves the timer to another one, even mid-run`() = runTest {
+        val other = project(id = 9, name = "Study", focusMinutes = 15)
+        val h = harness()
+        h.engine.setActiveProject(work)
+        runCurrent()
+        h.engine.togglePlayPause()
+        advance(60_000)
+
+        h.engine.onActiveProjectArchived(other)
+        runCurrent()
+
+        // Refusing here would leave the screen pointed at a project no carousel page can match.
+        assertEquals(other.id, h.state.project?.id)
+        assertEquals(TimerStatus.IDLE, h.state.status)
+        assertEquals(15 * 60, h.state.remainingSeconds)
+        assertEquals("the abandoned interval is not recorded", 0, h.stats.records.size)
+    }
+
+    @Test
+    fun `the abandoned interval stops ticking instead of finishing in the background`() = runTest {
+        val other = project(id = 9, name = "Study", focusMinutes = 15)
+        val h = harness()
+        h.engine.setActiveProject(work)
+        runCurrent()
+        h.engine.togglePlayPause()
+        advance(60_000)
+        h.engine.onActiveProjectArchived(other)
+        runCurrent()
+
+        // Long past the archived project's original deadline.
+        advance(30 * 60_000L)
+
+        assertEquals(0, h.stats.records.size)
+        assertEquals(TimerStatus.IDLE, h.state.status)
+    }
+
+    @Test
     fun `starting by hand dings and buzzes once`() = runTest {
         val h = harness()
         h.engine.setActiveProject(work)

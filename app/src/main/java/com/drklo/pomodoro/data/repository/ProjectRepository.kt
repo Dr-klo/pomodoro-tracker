@@ -1,5 +1,7 @@
 package com.drklo.pomodoro.data.repository
 
+import androidx.room.withTransaction
+import com.drklo.pomodoro.data.db.AppDatabase
 import com.drklo.pomodoro.data.db.ProjectDao
 import com.drklo.pomodoro.data.db.ProjectEntity
 import com.drklo.pomodoro.data.db.toDomain
@@ -8,9 +10,16 @@ import com.drklo.pomodoro.data.model.Project
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class ProjectRepository(private val dao: ProjectDao) {
+class ProjectRepository(private val db: AppDatabase) {
 
+    private val dao: ProjectDao = db.projectDao()
+
+    /** What the carousel and the settings list show: everything the user can still pick. */
     val projects: Flow<List<Project>> =
+        dao.observeActive().map { list -> list.map(ProjectEntity::toDomain) }
+
+    /** What the reports read: archived projects still own their history and must keep naming it. */
+    val allProjects: Flow<List<Project>> =
         dao.observeAll().map { list -> list.map(ProjectEntity::toDomain) }
 
     suspend fun getById(id: Long): Project? = dao.getById(id)?.toDomain()
@@ -23,7 +32,20 @@ class ProjectRepository(private val dao: ProjectDao) {
 
     suspend fun update(project: Project) = dao.update(project.toEntity())
 
-    suspend fun delete(project: Project) = dao.delete(project.toEntity())
+    /**
+     * Removes [project] from the carousel while keeping its history readable (F-R2-01). Refuses to
+     * archive the last active project — an empty carousel leaves the main screen with nothing to
+     * show and no way back (F-R5-03), so the rule is enforced here and not only by a greyed-out
+     * button. Returns false when the request was refused.
+     */
+    suspend fun archive(
+        project: Project,
+        now: Long = System.currentTimeMillis()
+    ): Boolean = db.withTransaction {
+        if (dao.countActive() <= 1) return@withTransaction false
+        dao.archive(project.id, now)
+        true
+    }
 
     /** Populates default projects on first launch. */
     suspend fun ensureSeeded() {

@@ -42,10 +42,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             projects.collect { list ->
                 if (list.isEmpty()) return@collect
                 val active = engine.state.value.project
-                if (active == null) {
-                    engine.setActiveProject(list.first())
-                } else {
-                    list.firstOrNull { it.id == active.id }?.let { engine.refreshActiveProject(it) }
+                val stillThere = list.firstOrNull { it.id == active?.id }
+                when {
+                    active == null -> engine.setActiveProject(list.first())
+                    stillThere != null -> engine.refreshActiveProject(stillThere)
+                    // The active project was archived (possibly mid-session): move the timer to the
+                    // first remaining one, or the screen stays pointed at something that is gone.
+                    else -> {
+                        engine.onActiveProjectArchived(list.first())
+                        TimerService.stop(getApplication())
+                    }
                 }
             }
         }

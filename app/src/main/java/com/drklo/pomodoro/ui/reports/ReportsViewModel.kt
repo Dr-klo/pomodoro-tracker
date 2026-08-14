@@ -30,7 +30,7 @@ class ReportsViewModel(app: Application) : AndroidViewModel(app) {
 
     private val container = (app as PomodoroApp).container
 
-    val projects: StateFlow<List<Project>> = container.projectRepository.projects
+    val projects: StateFlow<List<Project>> = container.projectRepository.allProjects
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val logs: StateFlow<List<PomodoroLog>> = container.statsRepository.observeLog()

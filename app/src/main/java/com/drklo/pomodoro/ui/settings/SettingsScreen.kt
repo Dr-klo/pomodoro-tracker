@@ -49,6 +49,7 @@ import com.drklo.pomodoro.R
 import com.drklo.pomodoro.data.model.AppLanguage
 import com.drklo.pomodoro.data.model.Project
 import com.drklo.pomodoro.data.model.ThemeMode
+import com.drklo.pomodoro.ui.common.ConfirmDeleteProjectDialog
 import com.drklo.pomodoro.ui.common.SegmentedChoice
 import com.drklo.pomodoro.ui.common.Stepper
 import com.drklo.pomodoro.util.BatteryOptimization
@@ -66,6 +67,19 @@ fun SettingsScreen(
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val projects by viewModel.projects.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
+    // The project the user asked to delete, held until they confirm.
+    var pendingDelete by remember { mutableStateOf<Project?>(null) }
+    pendingDelete?.let { project ->
+        ConfirmDeleteProjectDialog(
+            projectName = project.name,
+            onConfirm = {
+                pendingDelete = null
+                viewModel.deleteProject(project)
+            },
+            onDismiss = { pendingDelete = null }
+        )
+    }
 
     var batteryExempt by remember { mutableStateOf(BatteryOptimization.isIgnoring(context)) }
     val batteryLauncher = rememberLauncherForActivityResult(
@@ -97,7 +111,10 @@ fun SettingsScreen(
                         ProjectRow(
                             project = project,
                             onClick = { onEditProject(project.id) },
-                            onDelete = { viewModel.deleteProject(project) }
+                            // The last project may not be deleted: an empty carousel leaves the
+                            // main screen with nothing to act on.
+                            canDelete = projects.size > 1,
+                            onDelete = { pendingDelete = project }
                         )
                     }
                     RowDivider()
@@ -257,7 +274,12 @@ private fun SwitchRow(label: String, checked: Boolean, onCheckedChange: (Boolean
 }
 
 @Composable
-private fun ProjectRow(project: Project, onClick: () -> Unit, onDelete: () -> Unit) {
+private fun ProjectRow(
+    project: Project,
+    onClick: () -> Unit,
+    canDelete: Boolean,
+    onDelete: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -279,7 +301,7 @@ private fun ProjectRow(project: Project, onClick: () -> Unit, onDelete: () -> Un
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        IconButton(onClick = onDelete) {
+        IconButton(onClick = onDelete, enabled = canDelete) {
             Icon(
                 Icons.Filled.DeleteOutline,
                 contentDescription = stringResource(R.string.cd_delete),

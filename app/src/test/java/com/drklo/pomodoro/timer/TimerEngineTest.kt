@@ -8,6 +8,7 @@ import com.drklo.pomodoro.project
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -366,6 +367,77 @@ class TimerEngineTest {
 
         assertEquals(0, h.stats.records.size)
         assertEquals(TimerStatus.IDLE, h.state.status)
+    }
+
+    @Test
+    fun `an autostarted phase never publishes an idle frame`() = runTest {
+        val h = harness(GlobalSettings(autostartBreaks = true))
+        val frames = mutableListOf<TimerState>()
+        // Unconfined resumes the collector at the point of emission, so it sees every published
+        // frame instead of only the latest — which is the whole question here.
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            h.engine.state.collect { frames += it }
+        }
+        h.engine.setActiveProject(work)
+        runCurrent()
+        frames.clear()
+
+        runPomodoro(h)
+
+        assertEquals(Phase.SHORT_BREAK, h.state.phase)
+        assertEquals(TimerStatus.RUNNING, h.state.status)
+        val idle = frames.filter { it.status == TimerStatus.IDLE }
+        // The foreground service stops itself on IDLE; one such frame in the handover and the
+        // autostarted break runs with no notification behind it.
+        assertTrue("no IDLE frame may appear between two phases, saw ${idle.size}", idle.isEmpty())
+    }
+
+    @Test
+    fun `a pause just before the end wins over the tick that was about to finish`() = runTest {
+        val h = harness()
+        h.engine.setActiveProject(work)
+        runCurrent()
+        h.engine.togglePlayPause()
+
+        advance(25 * 60_000L - 200)
+        h.engine.togglePlayPause()
+        assertEquals(TimerStatus.PAUSED, h.state.status)
+
+        // The tick loop that was one pass short of completing must step out, not finish the phase.
+        advance(60_000)
+        assertEquals(TimerStatus.PAUSED, h.state.status)
+        assertEquals(Phase.POMODORO, h.state.phase)
+        assertEquals(0, h.stats.records.size)
+    }
+
+    @Test
+    fun `resetting a running interval stops its countdown for good`() = runTest {
+        val h = harness()
+        h.engine.setActiveProject(work)
+        runCurrent()
+        h.engine.togglePlayPause()
+        advance(60_000)
+
+        h.engine.reset()
+        advance(30 * 60_000L)
+
+        assertEquals(TimerStatus.IDLE, h.state.status)
+        assertEquals(25 * 60, h.state.remainingSeconds)
+        assertEquals(0, h.stats.records.size)
+    }
+
+    @Test
+    fun `today's count is re-read only after the finished pomodoro is written`() = runTest {
+        // A database that answers slowly: the read is queued while the write is still in flight.
+        val h = harness(stats = FakeStats(writeDelayMs = 500))
+        h.engine.setActiveProject(work)
+        runCurrent()
+        runPomodoro(h)
+
+        h.engine.setActiveProject(work)
+        advance(1_000)
+
+        assertEquals("the bullet must not disappear until the next recount", 1, h.state.completedToday)
     }
 
     @Test

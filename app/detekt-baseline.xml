@@ -151,10 +151,6 @@
     <ID>MagicNumber:TimerEffects.kt$TimerEffects$1318.5</ID>
     <ID>MagicNumber:TimerEffects.kt$TimerEffects$1568.0</ID>
     <ID>MagicNumber:TimerEffects.kt$TimerEffects$2637.0</ID>
-    <ID>MagicNumber:TimerEngine.kt$TimerEngine$1000.0</ID>
-    <ID>MagicNumber:TimerEngine.kt$TimerEngine$1000L</ID>
-    <ID>MagicNumber:TimerEngine.kt$TimerEngine$200</ID>
-    <ID>MagicNumber:TimerEngine.kt$TimerEngine$60_000L</ID>
     <ID>MagicNumber:ToneSynth.kt$ToneSynth$0.004</ID>
     <ID>MagicNumber:ToneSynth.kt$ToneSynth$0.95</ID>
     <ID>MagicNumber:ToneSynth.kt$ToneSynth$16</ID>
@@ -203,8 +199,6 @@
     <ID>MultiLineIfElse:SessionBullets.kt$Modifier.border(width = 1.5.dp, color = color.copy(alpha = 0.5f), shape = CircleShape)</ID>
     <ID>MultiLineIfElse:SettingsScreen.kt$"$v ${context.getString(R.string.minutes_unit)}"</ID>
     <ID>MultiLineIfElse:SettingsScreen.kt$context.getString(R.string.value_off)</ID>
-    <ID>MultiLineIfElse:TimerEngine.kt$TimerEngine$it</ID>
-    <ID>MultiLineIfElse:TimerEngine.kt$TimerEngine$it.copy(completedToday = today, completedInSession = sessionBullets)</ID>
     <ID>MultiLineIfElse:TimerState.kt$TimerState$((totalSeconds - remainingSeconds).toFloat() / totalSeconds).coerceIn(0f, 1f)</ID>
     <ID>MultiLineIfElse:TimerState.kt$TimerState$0f</ID>
     <ID>MultiLineIfElse:WeekJournal.kt$TooltipRow( name = p.name, colorArgb = p.pomodoroColor, focusSec = forProject.sumOf { it.durationSeconds }, pomodoros = forProject.size )</ID>
@@ -215,7 +209,6 @@
     <ID>PropertyWrapping:PeriodChart.kt$val prevBars = remember(logs, prevBuckets, projects) { buildStackedBars(logs, prevBuckets, projects, locale, valueOf) }</ID>
     <ID>ReturnCount:DonutChart.kt$private fun sliceAt( offset: Offset, width: Float, height: Float, values: List&lt;ProjectValue&gt;, total: Float ): Int?</ID>
     <ID>ReturnCount:MainViewModel.kt$MainViewModel$fun onSelectProject(index: Int)</ID>
-    <ID>ReturnCount:TimerEngine.kt$TimerEngine$fun refreshForNewDayIfNeeded()</ID>
     <ID>SpacingBetweenDeclarationsWithComments:TimerEvent.kt$TimerEvent.GoalReached$/** Daily goal for [projectId] was just reached — triggers the fanfare animation (F-014). */</ID>
     <ID>TooManyFunctions:SettingsRepository.kt$SettingsRepository : SettingsSource</ID>
     <ID>TooManyFunctions:SettingsViewModel.kt$SettingsViewModel : AndroidViewModel</ID>

@@ -24,7 +24,14 @@ import kotlinx.coroutines.launch
 
 /**
  * Keeps the process alive and shows an ongoing notification while the timer runs or is paused
- * (PRD: reliable background timer via Foreground Service). Stops itself when the timer goes idle.
+ * (PRD: reliable background timer via Foreground Service).
+ *
+ * **Who owns the lifecycle.** One rule, in one direction: the service is *started* when the user
+ * starts a phase from the UI, and it *stops itself* the moment the timer reports IDLE. Nothing else
+ * calls [stopService] — an owner split between the ViewModel and the service is how a phase ends up
+ * running with no notification behind it. Autostarted phases need no start of their own: the engine
+ * hands over from one phase to the next without ever publishing an IDLE frame in between, so the
+ * service that was already running simply keeps going.
  */
 class TimerService : Service() {
 
@@ -138,10 +145,6 @@ class TimerService : Service() {
 
         fun start(context: Context) {
             context.startForegroundService(Intent(context, TimerService::class.java))
-        }
-
-        fun stop(context: Context) {
-            context.stopService(Intent(context, TimerService::class.java))
         }
     }
 }

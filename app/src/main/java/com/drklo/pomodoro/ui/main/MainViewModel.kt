@@ -48,10 +48,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     stillThere != null -> engine.refreshActiveProject(stillThere)
                     // The active project was archived (possibly mid-session): move the timer to the
                     // first remaining one, or the screen stays pointed at something that is gone.
-                    else -> {
-                        engine.onActiveProjectArchived(list.first())
-                        TimerService.stop(getApplication())
-                    }
+                    // The service needs no nudge here: the engine goes idle, and idle is
+                    // precisely when the service stops itself.
+                    else -> engine.onActiveProjectArchived(list.first())
                 }
             }
         }

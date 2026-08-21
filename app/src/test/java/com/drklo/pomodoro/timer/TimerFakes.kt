@@ -2,6 +2,7 @@ package com.drklo.pomodoro.timer
 
 import com.drklo.pomodoro.data.model.GlobalSettings
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestCoroutineScheduler
@@ -46,8 +47,15 @@ class FakeSettings(initial: GlobalSettings = GlobalSettings()) : SettingsSource 
     }
 }
 
-/** In-memory stats: what was written, and what a fresh session would read back. */
-class FakeStats(initialCounts: Map<Pair<Long, String>, Int> = emptyMap()) : PomodoroStats {
+/**
+ * In-memory stats: what was written, and what a fresh session would read back. [writeDelayMs]
+ * stands in for a database that does not answer instantly — without it every call completes in one
+ * step and a test cannot tell an ordered queue from a lucky one.
+ */
+class FakeStats(
+    initialCounts: Map<Pair<Long, String>, Int> = emptyMap(),
+    private val writeDelayMs: Long = 0
+) : PomodoroStats {
 
     data class Record(
         val projectId: Long,
@@ -70,6 +78,7 @@ class FakeStats(initialCounts: Map<Pair<Long, String>, Int> = emptyMap()) : Pomo
         endEpochMs: Long,
         durationSeconds: Int
     ) {
+        if (writeDelayMs > 0) delay(writeDelayMs)
         records += Record(projectId, dayKey, startEpochMs, endEpochMs, durationSeconds)
         counts[projectId to dayKey] = (counts[projectId to dayKey] ?: 0) + 1
     }

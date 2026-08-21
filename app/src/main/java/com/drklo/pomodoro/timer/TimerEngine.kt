@@ -110,7 +110,14 @@ class TimerEngine(
             TimerStatus.RUNNING, TimerStatus.PAUSED -> s.copy(project = updated)
             TimerStatus.IDLE -> {
                 val total = updated.durationSecondsFor(s.phase)
-                s.copy(project = updated, totalSeconds = total, remainingSeconds = total)
+                // Room re-emits the whole project list whenever any row changes, so editing a
+                // *different* project used to silently undo a scrub here. Only a duration that
+                // actually changed is worth resetting the interval for.
+                if (total == s.totalSeconds) {
+                    s.copy(project = updated)
+                } else {
+                    s.copy(project = updated, totalSeconds = total, remainingSeconds = total)
+                }
             }
         }
     }

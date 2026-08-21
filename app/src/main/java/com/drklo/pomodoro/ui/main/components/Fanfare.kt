@@ -22,11 +22,14 @@ import kotlinx.coroutines.delay
 
 /**
  * Simple, basic goal-reached celebration (PRD: "фанфары" = basic animation, no sound).
- * Shown briefly whenever [trigger] changes to a new non-zero value.
+ * Shown briefly whenever [trigger] changes to a new non-zero value, then reported back through
+ * [onShown] so the trigger can be cleared — otherwise entering this composition again (returning
+ * from Reports, say) would replay it for the rest of the day.
  */
 @Composable
 fun Fanfare(
     trigger: Int,
+    onShown: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var visible by remember { mutableStateOf(false) }
@@ -34,8 +37,9 @@ fun Fanfare(
     LaunchedEffect(trigger) {
         if (trigger > 0) {
             visible = true
-            delay(2_000)
+            delay(VISIBLE_MS)
             visible = false
+            onShown()
         }
     }
 
@@ -52,7 +56,10 @@ fun Fanfare(
         modifier = modifier
     ) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(text = "🎉", fontSize = (96 * scale).sp)
+            Text(text = "🎉", fontSize = (BASE_FONT_SIZE * scale).sp)
         }
     }
 }
+
+private const val VISIBLE_MS = 2_000L
+private const val BASE_FONT_SIZE = 96

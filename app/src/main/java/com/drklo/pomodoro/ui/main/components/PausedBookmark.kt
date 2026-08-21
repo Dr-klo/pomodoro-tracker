@@ -16,7 +16,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,8 +43,12 @@ fun PausedBookmark(
     modifier: Modifier = Modifier
 ) {
     val offsetX = remember { Animatable(0f) }
+    // Starting from the current value means a bookmark that leaves and re-enters the composition
+    // (swiping onto the paused project and away again) does not re-play a shake nobody asked for.
+    var handled by remember { mutableIntStateOf(shakeTrigger) }
     LaunchedEffect(shakeTrigger) {
-        if (shakeTrigger > 0) {
+        if (shakeTrigger > handled) {
+            handled = shakeTrigger
             repeat(3) {
                 offsetX.animateTo(12f, tween(45))
                 offsetX.animateTo(-12f, tween(45))

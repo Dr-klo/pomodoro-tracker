@@ -91,7 +91,12 @@ fun MainScreen(
     // Always-on display (F-011): keep the screen awake while the timer is active or awaiting.
     val keepOn = settings.alwaysOnDisplay && (state.status != TimerStatus.IDLE || state.awaitingNext)
     val view = LocalView.current
-    LaunchedEffect(keepOn) { view.keepScreenOn = keepOn }
+    // Cleared on the way out too: leaving for Reports used to leave the flag stuck on the View,
+    // so the screen kept burning even after the timer had stopped.
+    DisposableEffect(view, keepOn) {
+        view.keepScreenOn = keepOn
+        onDispose { view.keepScreenOn = false }
+    }
 
     // Auto-hide system bars after inactivity so the Samsung nav buttons stop overlapping the
     // top-right icons (especially in landscape). Any touch reveals them; edge-swipe shows transiently.
@@ -137,6 +142,19 @@ fun MainScreen(
         } else 0
     }
     val pagerState = rememberPagerState(initialPage = startPage) { pageCount }
+
+    // The pager keeps its page number when the project count changes, but the project on screen is
+    // `page % size` — so deleting a project silently slides the carousel onto a different one.
+    // Re-aim it at whatever the engine still considers active.
+    LaunchedEffect(projects.size) {
+        val target = if (infinite) {
+            val base = pagerState.currentPage - (pagerState.currentPage % projects.size)
+            base + viewModel.indexOfActiveProject()
+        } else {
+            0
+        }
+        if (target != pagerState.currentPage) pagerState.scrollToPage(target)
+    }
 
     // React only to genuine user-driven page settles (drop the initial value so returning from
     // another screen does not reset a paused timer) — F-008, fix for settings round-trip.
@@ -239,7 +257,11 @@ fun MainScreen(
             }
         }
 
-        Fanfare(trigger = fanfareTrigger, modifier = Modifier.fillMaxSize())
+        Fanfare(
+            trigger = fanfareTrigger,
+            onShown = viewModel::onFanfareShown,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 }
 

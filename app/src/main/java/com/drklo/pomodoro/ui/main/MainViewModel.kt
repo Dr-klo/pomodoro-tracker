@@ -31,7 +31,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val settings: StateFlow<GlobalSettings> = container.settingsRepository.settings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GlobalSettings())
 
-    /** Incremented each time the daily goal is reached, to trigger the fanfare animation. */
+    /**
+     * Incremented each time the daily goal is reached, and cleared once the celebration has played
+     * (see [onFanfareShown]). A counter that only grows would replay 🎉 on every return to this
+     * screen for the rest of the day, because entering the composition re-runs the effect.
+     */
     private val _fanfareTrigger = MutableStateFlow(0)
     val fanfareTrigger: StateFlow<Int> = _fanfareTrigger.asStateFlow()
 
@@ -61,6 +65,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 }
             }
         }
+    }
+
+    /** The celebration has played; drop it so re-entering the screen does not replay it. */
+    fun onFanfareShown() {
+        _fanfareTrigger.value = 0
     }
 
     /**

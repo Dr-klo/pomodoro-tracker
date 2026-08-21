@@ -441,6 +441,33 @@ class TimerEngineTest {
     }
 
     @Test
+    fun `re-emitting an unchanged project leaves a scrubbed interval alone`() = runTest {
+        val h = harness()
+        h.engine.setActiveProject(work)
+        runCurrent()
+        h.engine.seek(0.4f)
+        assertEquals(600, h.state.remainingSeconds)
+
+        // Editing a different project makes Room re-emit this one, unchanged.
+        h.engine.refreshActiveProject(work)
+
+        assertEquals("the scrub must survive a list re-emission", 600, h.state.remainingSeconds)
+    }
+
+    @Test
+    fun `an actually edited duration does reset the interval`() = runTest {
+        val h = harness()
+        h.engine.setActiveProject(work)
+        runCurrent()
+        h.engine.seek(0.4f)
+
+        h.engine.refreshActiveProject(work.copy(focusMinutes = 40))
+
+        assertEquals(40 * 60, h.state.totalSeconds)
+        assertEquals(40 * 60, h.state.remainingSeconds)
+    }
+
+    @Test
     fun `starting by hand dings and buzzes once`() = runTest {
         val h = harness()
         h.engine.setActiveProject(work)

@@ -166,6 +166,72 @@ class AggregationTest {
     }
 
     @Test
+    fun `the earliest logged day bounds how far back the reports can page`() {
+        val logs = listOf(
+            log(work.id, "2026-05-13"),
+            log(work.id, "2026-03-02"),
+            log(study.id, "2026-04-20")
+        )
+
+        assertEquals(LocalDate.of(2026, 3, 2), earliestLogDate(logs))
+        assertEquals(null, earliestLogDate(emptyList()))
+        assertEquals(null, earliestLogDate(listOf(log(work.id, "not-a-date"))))
+    }
+
+    @Test
+    fun `only the part of a period that has already happened counts as elapsed`() {
+        val weekStart = LocalDate.of(2026, 5, 11)
+        val weekEnd = weekStart.plusDays(6)
+
+        // Wednesday: three days of this week are in.
+        assertEquals(3, elapsedDaysIn(weekStart, weekEnd, LocalDate.of(2026, 5, 13)))
+        // A week that is over counts in full, no matter how long ago it ended.
+        assertEquals(7, elapsedDaysIn(weekStart, weekEnd, LocalDate.of(2026, 6, 1)))
+        // Its first day, and anything before it, is still one day rather than zero or negative.
+        assertEquals(1, elapsedDaysIn(weekStart, weekEnd, weekStart))
+        assertEquals(1, elapsedDaysIn(weekStart, weekEnd, weekStart.minusDays(5)))
+    }
+
+    @Test
+    fun `comparing periods uses the same number of days on both sides`() {
+        val logs = listOf(
+            // This week: Monday and Tuesday.
+            log(work.id, "2026-05-11", durationSeconds = 1500),
+            log(work.id, "2026-05-12", durationSeconds = 1500),
+            // Last week: two quiet early days, then a lot of work later on.
+            log(work.id, "2026-05-04", durationSeconds = 900),
+            log(work.id, "2026-05-05", durationSeconds = 900),
+            log(work.id, "2026-05-08", durationSeconds = 6000),
+            log(work.id, "2026-05-10", durationSeconds = 6000)
+        )
+        val thisWeek = LocalDate.of(2026, 5, 11)
+        val lastWeek = thisWeek.minusWeeks(1)
+        val elapsed = elapsedDaysIn(thisWeek, thisWeek.plusDays(6), today = LocalDate.of(2026, 5, 12))
+
+        val current = sumInRange(logs, thisWeek, thisWeek.plusDays(elapsed - 1), focusSeconds)
+        val previous = sumInRange(logs, lastWeek, lastWeek.plusDays(elapsed - 1), focusSeconds)
+
+        assertEquals(3000f, current, 0f)
+        // Against the whole of last week this reads as a collapse; against its first two days it
+        // reads as "ahead of my usual", which is what the number is for.
+        assertEquals(1800f, previous, 0f)
+    }
+
+    @Test
+    fun `a range sum ignores logs outside it and unparseable days`() {
+        val logs = listOf(
+            log(work.id, "2026-05-10"),
+            log(work.id, "2026-05-11"),
+            log(work.id, "2026-05-20"),
+            log(work.id, "broken")
+        )
+
+        val sum = sumInRange(logs, LocalDate.of(2026, 5, 10), LocalDate.of(2026, 5, 11), one)
+
+        assertEquals(2f, sum, 0f)
+    }
+
+    @Test
     fun `a day is indexed with its total and its per-project split`() {
         val metrics = metricsByDay(
             listOf(

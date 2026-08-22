@@ -39,14 +39,21 @@ class ReportsViewModel(app: Application) : AndroidViewModel(app) {
     private val settings: StateFlow<GlobalSettings> = container.settingsRepository.settings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GlobalSettings())
 
-    /** Logical "today" date, honoring the end-of-day boundary. */
-    val today: StateFlow<LocalDate> = settings
-        .map { LogicalDay.dateFor(LocalDateTime.now(), it.dayEndHour, it.dayEndMinute) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LocalDate.now())
+    /**
+     * The logical "today" every element of this screen is drawn against, honoring the end-of-day
+     * boundary. Recomputed when the settings change or a pomodoro lands — a new log entry is the
+     * cheapest signal available that the clock has moved and the day may have rolled over.
+     *
+     * There is deliberately only one of these. The summary used to work out its own date, so a
+     * pomodoro finished at 00:05 counted as today in the header while every chart still belonged to
+     * yesterday: one screen, two answers to the same question.
+     */
+    val today: StateFlow<LocalDate> = combine(settings, logs) { s, _ ->
+        LogicalDay.dateFor(LocalDateTime.now(), s.dayEndHour, s.dayEndMinute)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LocalDate.now())
 
     val summary: StateFlow<ReportsSummary> =
-        combine(logs, settings) { log, s ->
-            val today = LogicalDay.dateFor(LocalDateTime.now(), s.dayEndHour, s.dayEndMinute)
+        combine(logs, today) { log, today ->
             val todayKey = today.toString()
             val weekKeys = (0..6).map { today.minusDays(it.toLong()).toString() }.toSet()
             ReportsSummary(

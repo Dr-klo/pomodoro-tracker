@@ -27,8 +27,7 @@ import com.drklo.pomodoro.ui.reports.Aggregation
 fun AggregationBar(
     aggregation: Aggregation,
     onAggregationChange: (Aggregation) -> Unit,
-    page: Int,
-    onPageChange: (Int) -> Unit,
+    paging: Paging,
     periodLabel: String,
     modifier: Modifier = Modifier
 ) {
@@ -46,7 +45,9 @@ fun AggregationBar(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = { onPageChange(page + 1) }) {
+        // Bounded by the oldest pomodoro on record: without it, "‹" walks off into an endless run
+        // of empty periods with nothing to say the history has ended.
+        IconButton(onClick = { paging.onChange(paging.page + 1) }, enabled = paging.canGoBack) {
             Icon(Icons.Filled.ChevronLeft, contentDescription = stringResource(R.string.cd_prev))
         }
         Text(
@@ -56,8 +57,14 @@ fun AggregationBar(
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.weight(1f)
         )
-        IconButton(onClick = { onPageChange(page - 1) }, enabled = page > 0) {
+        IconButton(onClick = { paging.onChange(paging.page - 1) }, enabled = paging.page > 0) {
             Icon(Icons.Filled.ChevronRight, contentDescription = stringResource(R.string.cd_next))
         }
     }
 }
+
+/**
+ * ‹ › navigation for a report chart: which page is shown, whether there is any history left behind
+ * it, and how to move. The three always travel together, so they travel as one.
+ */
+data class Paging(val page: Int, val canGoBack: Boolean, val onChange: (Int) -> Unit)

@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import com.drklo.pomodoro.R
 import com.drklo.pomodoro.data.model.PomodoroLog
 import com.drklo.pomodoro.data.model.Project
+import com.drklo.pomodoro.ui.reports.dayTitle
 import com.drklo.pomodoro.ui.reports.metricsByDay
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -149,23 +150,21 @@ fun MonthCalendar(
             // Only projects that ran that day, so the rows add up to the headline above them.
             rows = projects.mapNotNull { p ->
                 val totals = selectedMetrics?.byProject?.get(p.id) ?: return@mapNotNull null
-                val goal = if (p.dailyGoal > 0) {
-                    " · " + stringResource(R.string.chart_goal_progress, totals.pomodoros, p.dailyGoal)
-                } else {
-                    ""
-                }
                 TooltipRow(
-                    name = p.name + goal,
+                    name = p.name,
                     colorArgb = p.pomodoroColor,
                     focusSec = totals.focusSec,
-                    pomodoros = totals.pomodoros
+                    pomodoros = totals.pomodoros,
+                    note = if (p.dailyGoal > 0) {
+                        stringResource(R.string.chart_goal_progress, totals.pomodoros, p.dailyGoal)
+                    } else {
+                        null
+                    }
                 )
             }
         )
     }
 }
-
-private val dayTitle: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE, dd.MM")
 
 /**
  * One project's arc in a day ring: it owns [share] of the circle (its daily goal's weight in the

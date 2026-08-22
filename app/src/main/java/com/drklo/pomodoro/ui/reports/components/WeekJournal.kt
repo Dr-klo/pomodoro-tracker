@@ -27,11 +27,11 @@ import androidx.compose.ui.unit.sp
 import com.drklo.pomodoro.R
 import com.drklo.pomodoro.data.model.PomodoroLog
 import com.drklo.pomodoro.data.model.Project
+import com.drklo.pomodoro.ui.reports.dayTitle
 import com.drklo.pomodoro.ui.theme.DefaultPomodoroColor
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -168,8 +168,6 @@ fun WeekJournal(
         )
     }
 }
-
-private val dayTitle: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE, dd.MM")
 
 // Grid geometry, defined once: the draw pass and the hit test must agree on where a row is, so
 // neither is allowed its own copy of these numbers.

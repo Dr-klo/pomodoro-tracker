@@ -99,17 +99,20 @@ fun DonutChart(
                 values.forEachIndexed { i, v ->
                     val sweep = 360f * (v.value / total)
                     val isSelected = i == selectedIndex
-                    // The selected slice keeps full color and grows; the others recede.
-                    val extra = if (isSelected) stroke * 0.25f else 0f
+                    // The selected slice keeps full colour and grows; the others recede. Growing the
+                    // stroke alone would push the ring past the canvas, since the arc geometry is
+                    // computed for the base width — so the arc is inset by the same amount.
+                    val extra = if (isSelected) stroke * SELECTED_GROWTH else 0f
+                    val grownInset = inset - extra / 2f
                     drawArc(
                         color = Color(v.colorArgb),
                         startAngle = start,
                         sweepAngle = sweep,
                         useCenter = false,
-                        topLeft = topLeft,
-                        size = arcSize,
+                        topLeft = Offset(grownInset, grownInset),
+                        size = Size(size.width - 2 * grownInset, size.height - 2 * grownInset),
                         style = Stroke(width = stroke + extra),
-                        alpha = if (selectedIndex == null || isSelected) 1f else 0.3f
+                        alpha = if (selectedIndex == null || isSelected) 1f else DIMMED_ALPHA
                     )
                     start += sweep
                 }
@@ -165,16 +168,21 @@ fun DonutChart(
             title = selected?.name,
             focusSec = selected?.focusSec ?: 0,
             pomodoros = selected?.pomodoros ?: 0,
-            hint = stringResource(R.string.chart_tap_hint_slice),
-            note = selected?.let {
-                stringResource(R.string.chart_share_of_total, (it.value / total * 100f).roundToInt())
-            }
+            // No percentage here on purpose: the legend row right above already shows it, and what
+            // the tooltip adds is the hours/pomodoros pair.
+            hint = stringResource(R.string.chart_tap_hint_slice)
         )
     }
 }
 
 /** Fraction of the donut's diameter taken by the ring; shared by the draw pass and the hit test. */
 private const val DONUT_STROKE_RATIO = 0.18f
+
+/** How much thicker the selected slice is drawn, as a fraction of the ring's width. */
+private const val SELECTED_GROWTH = 0.25f
+
+/** Opacity of the slices that are not selected. */
+private const val DIMMED_ALPHA = 0.3f
 
 /**
  * Index of the slice under [offset] in a [width]x[height] donut, or null if the tap missed the

@@ -13,7 +13,10 @@ import com.drklo.pomodoro.data.model.Project
 import com.drklo.pomodoro.ui.reports.Aggregation
 import com.drklo.pomodoro.ui.reports.bucketsFor
 import com.drklo.pomodoro.ui.reports.buildStackedBars
+import com.drklo.pomodoro.ui.reports.earliestLogDate
+import com.drklo.pomodoro.ui.reports.elapsedDaysIn
 import com.drklo.pomodoro.ui.reports.periodLabel
+import com.drklo.pomodoro.ui.reports.sumInRange
 import java.time.LocalDate
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -42,12 +45,24 @@ fun PeriodChart(
     }
 
     val prevBuckets = remember(aggregation, page, today) { bucketsFor(aggregation, today, page + 1, locale) }
-    val prevBars = remember(logs, prevBuckets, projects) { buildStackedBars(logs, prevBuckets, projects, locale, valueOf) }
 
-    val average = if (bars.isNotEmpty()) bars.sumOf { it.total.toDouble() } / bars.size else 0.0
+    // Compare like with like: only as many days of the previous period as have elapsed in this one.
+    // Measured against a whole previous period, an unfinished one reads as a collapse every time.
+    val elapsed = elapsedDaysIn(buckets.first().start, buckets.last().endInclusive, today)
+    val periodStart = buckets.first().start
+    val prevStart = prevBuckets.first().start
+    val currentTotal = sumInRange(logs, periodStart, periodStart.plusDays(elapsed - 1), valueOf)
+    val prevTotal = sumInRange(logs, prevStart, prevStart.plusDays(elapsed - 1), valueOf)
+
+    // The average is over the buckets that actually finished; counting today's half-done one as a
+    // full one drags the average down every morning.
+    val finished = bars.filterIndexed { i, _ -> buckets[i].endInclusive.isBefore(today) }
+    val averageBasis = finished.ifEmpty { bars }
+    val average =
+        if (averageBasis.isNotEmpty()) averageBasis.sumOf { it.total.toDouble() } / averageBasis.size else 0.0
     val maxTotal = bars.maxOfOrNull { it.total } ?: 0f
-    val currentTotal = bars.sumOf { it.total.toDouble() }.toFloat()
-    val prevTotal = prevBars.sumOf { it.total.toDouble() }.toFloat()
+    val barsTotal = bars.sumOf { it.total.toDouble() }.toFloat()
+    val earliest = remember(logs) { earliestLogDate(logs) }
 
     val avgMax = stringResource(
         R.string.chart_avg_max,
@@ -63,8 +78,14 @@ fun PeriodChart(
         AggregationBar(
             aggregation = aggregation,
             onAggregationChange = { aggregation = it; page = 0; selected = null },
-            page = page,
-            onPageChange = { page = it.coerceAtLeast(0); selected = null },
+            paging = Paging(
+                page = page,
+                canGoBack = earliest != null && periodStart.isAfter(earliest),
+                onChange = {
+                    page = it.coerceAtLeast(0)
+                    selected = null
+                }
+            ),
             periodLabel = periodLabel(buckets)
         )
         StackedBarChart(
@@ -79,7 +100,7 @@ fun PeriodChart(
             pomodoros = column?.pomodoros ?: 0,
             hint = stringResource(R.string.chart_tap_hint_bar),
             note = column?.let { col ->
-                val share = if (currentTotal > 0f) (col.total / currentTotal * 100f).roundToInt() else 0
+                val share = if (barsTotal > 0f) (col.total / barsTotal * 100f).roundToInt() else 0
                 stringResource(R.string.chart_share_of_total, share)
             },
             rows = column?.segments.orEmpty().map {

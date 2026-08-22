@@ -48,8 +48,17 @@ fun pomodorosText(count: Int): String =
 fun metricsText(focusSec: Int, pomodoros: Int): String =
     stringResource(R.string.chart_metrics, focusText(focusSec), pomodorosText(pomodoros))
 
-/** One line of a tooltip's per-project breakdown. */
-data class TooltipRow(val name: String, val colorArgb: Int, val focusSec: Int, val pomodoros: Int)
+/**
+ * One line of a tooltip's per-project breakdown. [note] is a short qualifier such as goal progress;
+ * keeping it out of [name] is what stops a long project name from dragging it onto a second line.
+ */
+data class TooltipRow(
+    val name: String,
+    val colorArgb: Int,
+    val focusSec: Int,
+    val pomodoros: Int,
+    val note: String? = null
+)
 
 /**
  * The detail panel a chart shows for the tapped element: what was tapped, how much time it holds
@@ -117,11 +126,19 @@ fun ChartTooltip(
                                             .clip(CircleShape)
                                             .background(Color(row.colorArgb))
                                     )
-                                    Text(
-                                        text = row.name,
-                                        modifier = Modifier.weight(1f).padding(start = 8.dp),
-                                        style = MaterialTheme.typography.bodySmall
-                                    )
+                                    Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
+                                        Text(
+                                            text = row.name,
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                        if (row.note != null) {
+                                            Text(
+                                                text = row.note,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
                                     Text(
                                         text = metricsText(row.focusSec, row.pomodoros),
                                         style = MaterialTheme.typography.bodySmall

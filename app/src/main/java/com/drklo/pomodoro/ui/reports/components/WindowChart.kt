@@ -2,6 +2,7 @@ package com.drklo.pomodoro.ui.reports.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -12,7 +13,10 @@ import com.drklo.pomodoro.data.model.PomodoroLog
 import com.drklo.pomodoro.data.model.Project
 import com.drklo.pomodoro.ui.reports.Aggregation
 import com.drklo.pomodoro.ui.reports.ProjectValue
+import com.drklo.pomodoro.ui.reports.earliestLogDate
+import com.drklo.pomodoro.ui.reports.elapsedDaysIn
 import com.drklo.pomodoro.ui.reports.sumByProject
+import com.drklo.pomodoro.ui.reports.sumInRange
 import com.drklo.pomodoro.ui.reports.windowFor
 import java.time.LocalDate
 import java.util.Locale
@@ -40,9 +44,13 @@ fun WindowChart(
     val values = remember(logs, window, projects) { sumByProject(logs, window, projects, valueOf) }
 
     val prevWindow = remember(aggregation, page, today) { windowFor(aggregation, today, page + 1, locale) }
-    val prevValues = remember(logs, prevWindow, projects) { sumByProject(logs, prevWindow, projects, valueOf) }
-    val currentTotal = values.sumOf { it.value.toDouble() }.toFloat()
-    val prevTotal = prevValues.sumOf { it.value.toDouble() }.toFloat()
+
+    // Only the elapsed part of the previous window counts, or the current (unfinished) one always
+    // looks like a slump: a Monday measured against a whole week.
+    val elapsed = elapsedDaysIn(window.start, window.endInclusive, today)
+    val currentTotal = sumInRange(logs, window.start, window.start.plusDays(elapsed - 1), valueOf)
+    val prevTotal = sumInRange(logs, prevWindow.start, prevWindow.start.plusDays(elapsed - 1), valueOf)
+    val earliest = remember(logs) { earliestLogDate(logs) }
     val whenLabel = stringResource(
         when (aggregation) {
             Aggregation.DAY -> R.string.prev_day
@@ -57,10 +65,15 @@ fun WindowChart(
         AggregationBar(
             aggregation = aggregation,
             onAggregationChange = { aggregation = it; page = 0 },
-            page = page,
-            onPageChange = { page = it.coerceAtLeast(0) },
+            paging = Paging(
+                page = page,
+                canGoBack = earliest != null && window.start.isAfter(earliest),
+                onChange = { page = it.coerceAtLeast(0) }
+            ),
             periodLabel = window.label
         )
-        content(values)
+        // Charts that render their own tooltip own their own selection; keying on the window is
+        // what drops it when the user pages, so a tooltip never outlives the data it described.
+        key(aggregation, page) { content(values) }
     }
 }

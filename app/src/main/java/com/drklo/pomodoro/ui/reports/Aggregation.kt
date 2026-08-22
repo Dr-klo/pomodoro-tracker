@@ -6,6 +6,7 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
+import java.time.temporal.ChronoUnit
 import java.util.Locale
 
 /** Time granularity for the period-based charts; [bucketCount] = how many buckets are shown. */
@@ -132,6 +133,46 @@ fun sumByProject(
             }
         }
         .sortedByDescending { it.value }
+}
+
+/**
+ * The earliest logical day with a recorded pomodoro, or null when nothing has been logged. Bounds
+ * how far back the report navigation may page: unbounded, "‹" walks forever through empty periods
+ * with nothing to say that the history ended.
+ */
+fun earliestLogDate(logs: List<PomodoroLog>): LocalDate? =
+    logs.minOfOrNull { it.dayKey }?.let { key -> runCatching { LocalDate.parse(key) }.getOrNull() }
+
+/**
+ * How many days of [start]..[endInclusive] have actually happened by [today]. A period that has not
+ * started yet still counts as one day, so callers never divide by zero or build an empty range.
+ */
+fun elapsedDaysIn(start: LocalDate, endInclusive: LocalDate, today: LocalDate): Long {
+    val last = if (today.isBefore(endInclusive)) today else endInclusive
+    return (ChronoUnit.DAYS.between(start, last) + 1).coerceAtLeast(1)
+}
+
+/**
+ * Sums [valueOf] over the logs falling between [start] and [endInclusive].
+ *
+ * This is what makes "vs the previous period" honest. The current period is almost always
+ * unfinished, so measuring it against a whole previous one reports a collapse every Monday morning:
+ * one day against seven. Callers cut the previous period to the stretch that has actually elapsed
+ * in the current one — first N days against first N days — and the number reads as "ahead of" or
+ * "behind my usual" instead.
+ */
+fun sumInRange(
+    logs: List<PomodoroLog>,
+    start: LocalDate,
+    endInclusive: LocalDate,
+    valueOf: (PomodoroLog) -> Float
+): Float {
+    var total = 0f
+    for (log in logs) {
+        val date = runCatching { LocalDate.parse(log.dayKey) }.getOrNull() ?: continue
+        if (!date.isBefore(start) && !date.isAfter(endInclusive)) total += valueOf(log)
+    }
+    return total
 }
 
 /** The two numbers every report element reports: time spent and pomodoros closed. */

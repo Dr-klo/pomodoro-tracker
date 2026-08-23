@@ -216,8 +216,7 @@ fun SettingsScreen(
                         selected = settings.language,
                         onSelect = { lang ->
                             if (settings.language != lang) {
-                                viewModel.setLanguage(lang)
-                                context.findActivity()?.recreate()
+                                viewModel.setLanguage(lang) { context.findActivity()?.recreate() }
                             }
                         },
                         modifier = Modifier.padding(vertical = 8.dp)

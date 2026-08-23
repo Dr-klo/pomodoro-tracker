@@ -86,7 +86,7 @@ fun PeriodChart(
                     selected = null
                 }
             ),
-            periodLabel = periodLabel(buckets)
+            periodLabel = periodLabel(buckets, locale)
         )
         StackedBarChart(
             columns = bars,

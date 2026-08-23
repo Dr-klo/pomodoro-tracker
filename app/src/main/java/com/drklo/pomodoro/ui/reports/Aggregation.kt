@@ -2,7 +2,6 @@ package com.drklo.pomodoro.ui.reports
 
 import com.drklo.pomodoro.data.model.PomodoroLog
 import com.drklo.pomodoro.data.model.Project
-import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -40,8 +39,6 @@ data class BarColumn(
     val pomodoros: Int
 )
 
-private val dayMonth: DateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM")
-
 /**
  * Builds the visible buckets for an aggregation and a page (0 = latest window, higher = older).
  * Windows are non-overlapping so paging moves by a whole screen.
@@ -56,10 +53,10 @@ fun bucketsFor(agg: Aggregation, today: LocalDate, page: Int, locale: Locale): L
             }
         }
         Aggregation.WEEK -> {
-            val weekStart = today.minusDays((today.dayOfWeek.value - DayOfWeek.MONDAY.value).toLong())
+            val weekStart = today.minusDays(daysFromWeekStart(today, locale))
             (7 downTo 0).map { offset ->
                 val ws = weekStart.minusWeeks(offset.toLong() + 8L * page)
-                DateBucket(ws.format(dayMonth), ws, ws.plusDays(6))
+                DateBucket(ws.format(dayMonthFormatter(locale)), ws, ws.plusDays(6))
             }
         }
         Aggregation.MONTH -> {
@@ -75,9 +72,10 @@ fun bucketsFor(agg: Aggregation, today: LocalDate, page: Int, locale: Locale): L
         }
     }
 
-fun periodLabel(buckets: List<DateBucket>): String {
+fun periodLabel(buckets: List<DateBucket>, locale: Locale): String {
     if (buckets.isEmpty()) return ""
-    return "${buckets.first().start.format(dayMonth)} – ${buckets.last().endInclusive.format(dayMonth)}"
+    val fmt = dayMonthFormatter(locale)
+    return "${buckets.first().start.format(fmt)} – ${buckets.last().endInclusive.format(fmt)}"
 }
 
 private val monthYear: DateTimeFormatter = DateTimeFormatter.ofPattern("LLLL yyyy")
@@ -87,14 +85,15 @@ fun windowFor(agg: Aggregation, today: LocalDate, page: Int, locale: Locale): Da
     when (agg) {
         Aggregation.DAY -> {
             val d = today.minusDays(page.toLong())
-            DateBucket(d.format(dayMonth), d, d)
+            DateBucket(d.format(dayMonthFormatter(locale)), d, d)
         }
         Aggregation.WEEK -> {
             val weekStart = today
-                .minusDays((today.dayOfWeek.value - DayOfWeek.MONDAY.value).toLong())
+                .minusDays(daysFromWeekStart(today, locale))
                 .minusWeeks(page.toLong())
             val end = weekStart.plusDays(6)
-            DateBucket("${weekStart.format(dayMonth)} – ${end.format(dayMonth)}", weekStart, end)
+            val fmt = dayMonthFormatter(locale)
+            DateBucket("${weekStart.format(fmt)} – ${end.format(fmt)}", weekStart, end)
         }
         Aggregation.MONTH -> {
             val ms = today.withDayOfMonth(1).minusMonths(page.toLong())
@@ -243,11 +242,12 @@ fun buildStackedBars(
  */
 private fun rangeLabelOf(bucket: DateBucket, locale: Locale): String = when {
     bucket.start == bucket.endInclusive ->
-        "${bucket.label}, ${bucket.start.format(dayMonth)}"
+        "${bucket.label}, ${bucket.start.format(dayMonthFormatter(locale))}"
     bucket.start.dayOfMonth == 1 && bucket.endInclusive == bucket.start.plusMonths(1).minusDays(1) ->
         bucket.start.format(monthYear.withLocale(locale))
     else ->
-        "${bucket.start.format(dayMonth)} – ${bucket.endInclusive.format(dayMonth)}"
+        "${bucket.start.format(dayMonthFormatter(locale))} – " +
+            bucket.endInclusive.format(dayMonthFormatter(locale))
 }
 
 /** Mutable accumulator for the three numbers every chart element carries. */

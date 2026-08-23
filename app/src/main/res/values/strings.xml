@@ -43,7 +43,8 @@
     <string name="chart_avg_max">avg %1$s · max %2$s</string>
     <string name="chart_focus_over_time">Focus time over time</string>
     <string name="chart_pomodoros_over_time">Pomodoros over time</string>
-    <string name="chart_time_distribution">Time by project</string>
+    <!-- The donut: how the period splits up. Distinct from "Time per project" (the bars) on purpose. -->
+    <string name="chart_time_distribution">Time distribution</string>
     <string name="chart_time_by_project">Time per project</string>
     <string name="chart_total">Total: %1$s</string>
     <string name="chart_no_data">No data for this period</string>

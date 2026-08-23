@@ -40,8 +40,9 @@ import com.drklo.pomodoro.R
 import com.drklo.pomodoro.data.model.PomodoroLog
 import com.drklo.pomodoro.data.model.Project
 import com.drklo.pomodoro.ui.reports.dayTitle
+import com.drklo.pomodoro.ui.reports.daysFromWeekStart
+import com.drklo.pomodoro.ui.reports.firstDayOfWeek
 import com.drklo.pomodoro.ui.reports.metricsByDay
-import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -70,6 +71,13 @@ fun MonthCalendar(
     // The whole ring is the day's combined goal, so each project's arc is weighted by its own goal.
     val totalGoal = remember(goalProjects) { goalProjects.sumOf { it.dailyGoal } }
 
+    // Column order follows the locale, exactly like the weekly buckets do — a header that always
+    // started on Monday would sit one column off from the dates under it for a US reader.
+    val weekdays = remember(locale) {
+        val first = firstDayOfWeek(locale)
+        List(7) { first.plus(it.toLong()) }
+    }
+
     val monthLabel = remember(month, locale) {
         month.format(DateTimeFormatter.ofPattern("LLLL yyyy").withLocale(locale))
     }
@@ -91,7 +99,7 @@ fun MonthCalendar(
 
         // Weekday headers (Mon..Sun).
         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-            for (d in DayOfWeek.entries) {
+            for (d in weekdays) {
                 Text(
                     text = d.getDisplayName(TextStyle.NARROW, locale),
                     textAlign = TextAlign.Center,
@@ -104,7 +112,7 @@ fun MonthCalendar(
 
         // Build the grid: leading blanks then the month's days, padded to full weeks.
         val first = month.atDay(1)
-        val leading = first.dayOfWeek.value - DayOfWeek.MONDAY.value
+        val leading = daysFromWeekStart(first, locale).toInt()
         val daysInMonth = month.lengthOfMonth()
         val cells = buildList {
             repeat(leading) { add(null) }

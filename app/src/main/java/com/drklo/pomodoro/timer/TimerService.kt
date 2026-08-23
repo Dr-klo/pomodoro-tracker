@@ -14,6 +14,7 @@ import com.drklo.pomodoro.PomodoroApp
 import com.drklo.pomodoro.R
 import com.drklo.pomodoro.data.model.Phase
 import com.drklo.pomodoro.data.model.TimerStatus
+import com.drklo.pomodoro.util.LocaleHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -41,10 +42,19 @@ class TimerService : Service() {
     private val engine: TimerEngine
         get() = (application as PomodoroApp).container.timerEngine
 
+    /**
+     * Strings for the notification. The service's own resources follow the *system* language, so
+     * without this the one element visible on a locked screen would ignore the language chosen in
+     * the app (F-023) — a Russian phone with the app set to English kept announcing «Помодоро».
+     */
+    private lateinit var localized: Context
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
+        val tag = (application as PomodoroApp).container.settingsRepository.currentLanguage().tag
+        localized = LocaleHelper.wrap(this, tag)
         createChannel()
     }
 
@@ -77,9 +87,9 @@ class TimerService : Service() {
     private fun buildNotification(): Notification {
         val state = engine.state.value
         val phaseText = when (state.phase) {
-            Phase.POMODORO -> getString(R.string.phase_pomodoro)
-            Phase.SHORT_BREAK -> getString(R.string.phase_short_break)
-            Phase.LONG_BREAK -> getString(R.string.phase_long_break)
+            Phase.POMODORO -> localized.getString(R.string.phase_pomodoro)
+            Phase.SHORT_BREAK -> localized.getString(R.string.phase_short_break)
+            Phase.LONG_BREAK -> localized.getString(R.string.phase_long_break)
         }
         val title = state.project?.name?.let { "$it · $phaseText" } ?: phaseText
         val text = formatMmSs(state.remainingSeconds)
@@ -103,11 +113,23 @@ class TimerService : Service() {
 
         // Pause/Resume + Reset controls (F-101).
         if (state.status == TimerStatus.RUNNING) {
-            builder.addAction(R.drawable.ic_notif_pause, getString(R.string.notif_pause), actionPendingIntent(ACTION_TOGGLE))
+            builder.addAction(
+                R.drawable.ic_notif_pause,
+                localized.getString(R.string.notif_pause),
+                actionPendingIntent(ACTION_TOGGLE)
+            )
         } else {
-            builder.addAction(R.drawable.ic_notif_play, getString(R.string.notif_resume), actionPendingIntent(ACTION_TOGGLE))
+            builder.addAction(
+                R.drawable.ic_notif_play,
+                localized.getString(R.string.notif_resume),
+                actionPendingIntent(ACTION_TOGGLE)
+            )
         }
-        builder.addAction(R.drawable.ic_notif_reset, getString(R.string.notif_reset), actionPendingIntent(ACTION_RESET))
+        builder.addAction(
+            R.drawable.ic_notif_reset,
+            localized.getString(R.string.notif_reset),
+            actionPendingIntent(ACTION_RESET)
+        )
 
         return builder.build()
     }
@@ -125,10 +147,10 @@ class TimerService : Service() {
     private fun createChannel() {
         val channel = NotificationChannel(
             CHANNEL_ID,
-            getString(R.string.timer_channel_name),
+            localized.getString(R.string.timer_channel_name),
             NotificationManager.IMPORTANCE_LOW
         ).apply {
-            description = getString(R.string.timer_channel_desc)
+            description = localized.getString(R.string.timer_channel_desc)
             setShowBadge(false)
         }
         notificationManager().createNotificationChannel(channel)

@@ -15,13 +15,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
-import com.drklo.pomodoro.data.model.GlobalSettings
-import com.drklo.pomodoro.data.model.ThemeMode
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.drklo.pomodoro.data.model.GlobalSettings
+import com.drklo.pomodoro.data.model.ThemeMode
 import com.drklo.pomodoro.data.repository.SettingsRepository
 import com.drklo.pomodoro.ui.main.MainScreen
 import com.drklo.pomodoro.ui.reports.ReportsScreen
@@ -29,8 +29,6 @@ import com.drklo.pomodoro.ui.settings.ProjectEditScreen
 import com.drklo.pomodoro.ui.settings.SettingsScreen
 import com.drklo.pomodoro.ui.theme.PomodoroTheme
 import com.drklo.pomodoro.util.LocaleHelper
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 
 class MainActivity : ComponentActivity() {
 
@@ -38,7 +36,7 @@ class MainActivity : ComponentActivity() {
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* no-op */ }
 
     override fun attachBaseContext(newBase: Context) {
-        val tag = runBlocking { SettingsRepository(newBase).settings.first().language.tag }
+        val tag = SettingsRepository(newBase).currentLanguage().tag
         super.attachBaseContext(LocaleHelper.wrap(newBase, tag))
     }
 

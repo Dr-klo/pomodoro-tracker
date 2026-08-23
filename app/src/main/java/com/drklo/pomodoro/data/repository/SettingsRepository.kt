@@ -15,7 +15,9 @@ import com.drklo.pomodoro.data.model.ThemeMode
 import com.drklo.pomodoro.timer.SettingsSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.runBlocking
 import java.io.IOException
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -57,6 +59,13 @@ class SettingsRepository(private val context: Context) : SettingsSource {
             themeMode = ThemeMode.fromName(p[Keys.THEME])
         )
     }
+
+    /**
+     * The chosen language, read synchronously. Needed where there is nothing to suspend in and no
+     * time to wait: [android.content.ContextWrapper.attachBaseContext] and a service's `onCreate`
+     * both have to resolve resources before anything else runs.
+     */
+    fun currentLanguage(): AppLanguage = runBlocking { settings.first().language }
 
     suspend fun setSoundEnabled(value: Boolean) = edit { it[Keys.SOUND] = value }
     suspend fun setVibrateEnabled(value: Boolean) = edit { it[Keys.VIBRATE] = value }

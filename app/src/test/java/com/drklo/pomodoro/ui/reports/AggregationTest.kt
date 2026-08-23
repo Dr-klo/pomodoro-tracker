@@ -112,7 +112,11 @@ class AggregationTest {
 
     @Test
     fun `a single day is labelled by weekday and date, a week by its range`() {
-        assertTrue(bars(emptyList()).last().rangeLabel.endsWith(", 13.05"))
+        // The date part follows the locale (this test runs in en-US), so assert the shape and the
+        // day, not a hardcoded dd.MM that would only hold for a Russian reader.
+        val dayLabel = bars(emptyList()).last().rangeLabel
+        assertTrue("expected 'weekday, date', got $dayLabel", dayLabel.contains(", "))
+        assertTrue("expected the 13th in $dayLabel", dayLabel.endsWith("13"))
 
         val week = buildStackedBars(
             logs = emptyList(),

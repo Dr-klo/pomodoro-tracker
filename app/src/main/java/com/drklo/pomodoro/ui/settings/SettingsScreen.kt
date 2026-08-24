@@ -43,12 +43,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.drklo.pomodoro.R
 import com.drklo.pomodoro.data.model.AppLanguage
 import com.drklo.pomodoro.data.model.Project
 import com.drklo.pomodoro.data.model.ThemeMode
+import com.drklo.pomodoro.ui.ViewModelFactories
 import com.drklo.pomodoro.ui.common.ConfirmDeleteProjectDialog
 import com.drklo.pomodoro.ui.common.SegmentedChoice
 import com.drklo.pomodoro.ui.common.Stepper
@@ -62,7 +65,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onEditProject: (Long) -> Unit,
     onAddProject: () -> Unit,
-    viewModel: SettingsViewModel = viewModel()
+    viewModel: SettingsViewModel = viewModel(factory = ViewModelFactories.settings)
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val projects by viewModel.projects.collectAsStateWithLifecycle()
@@ -85,6 +88,11 @@ fun SettingsScreen(
     val batteryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { batteryExempt = BatteryOptimization.isIgnoring(context) }
+    // Also re-checked whenever the screen comes back: the setting can be changed from Android's own
+    // settings, and the launcher callback only ever fires for the trip this screen started.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        batteryExempt = BatteryOptimization.isIgnoring(context)
+    }
 
     Scaffold(
         topBar = {

@@ -40,7 +40,7 @@
     <ID>ArgumentListWrapping:WeekJournal.kt$( h.toString(), x, size.height - 4.dp.toPx(), hourPaint )</ID>
     <ID>ArgumentListWrapping:WeekJournal.kt$( label, 4.dp.toPx(), rowTop + rowH / 2f + 4.dp.toPx(), labelPaint )</ID>
     <ID>CyclomaticComplexMethod:DonutChart.kt$@Composable fun DonutChart( values: List&lt;ProjectValue&gt;, centerLabel: String, modifier: Modifier = Modifier )</ID>
-    <ID>CyclomaticComplexMethod:MainScreen.kt$@Composable fun MainScreen( onOpenSettings: () -&gt; Unit, onOpenReports: () -&gt; Unit, modifier: Modifier = Modifier, viewModel: MainViewModel = viewModel() )</ID>
+    <ID>CyclomaticComplexMethod:MainScreen.kt$@Composable fun MainScreen( onOpenSettings: () -&gt; Unit, onOpenReports: () -&gt; Unit, modifier: Modifier = Modifier, viewModel: MainViewModel = viewModel(factory = ViewModelFactories.main) )</ID>
     <ID>CyclomaticComplexMethod:MainScreen.kt$@Composable private fun ProjectPage( project: Project, /** * Live timer state, or null for a page that is merely being browsed. Passing the whole state to * every page meant all of them recomposed once a second, redrawing canvases for projects that * only ever show a static preview. */ state: TimerState?, isLandscape: Boolean, holdFinishedColor: Boolean, actions: PageActions )</ID>
     <ID>CyclomaticComplexMethod:WeekJournal.kt$@Composable fun WeekJournal( logs: List&lt;PomodoroLog&gt;, today: LocalDate, projects: List&lt;Project&gt;, modifier: Modifier = Modifier )</ID>
     <ID>ImportOrdering:AggregationBar.kt$import androidx.compose.foundation.layout.fillMaxWidth import androidx.compose.material.icons.Icons import androidx.compose.material.icons.filled.ChevronLeft import androidx.compose.material.icons.filled.ChevronRight import androidx.compose.material3.Icon import androidx.compose.material3.IconButton import androidx.compose.material3.MaterialTheme import androidx.compose.material3.Text import androidx.compose.runtime.Composable import androidx.compose.ui.Alignment import androidx.compose.ui.Modifier import androidx.compose.ui.res.stringResource import androidx.compose.ui.text.font.FontWeight import androidx.compose.ui.text.style.TextAlign import androidx.compose.foundation.layout.Row import com.drklo.pomodoro.R import com.drklo.pomodoro.ui.common.SegmentedChoice import com.drklo.pomodoro.ui.reports.Aggregation</ID>
@@ -210,7 +210,7 @@
     <ID>ReturnCount:MainViewModel.kt$MainViewModel$fun onSelectProject(index: Int)</ID>
     <ID>SpacingBetweenDeclarationsWithComments:TimerEvent.kt$TimerEvent.GoalReached$/** Daily goal for [projectId] was just reached — triggers the fanfare animation (F-014). */</ID>
     <ID>TooManyFunctions:SettingsRepository.kt$SettingsRepository : SettingsSource</ID>
-    <ID>TooManyFunctions:SettingsViewModel.kt$SettingsViewModel : AndroidViewModel</ID>
+    <ID>TooManyFunctions:SettingsViewModel.kt$SettingsViewModel : ViewModel</ID>
     <ID>TooManyFunctions:TimerEngine.kt$TimerEngine</ID>
     <ID>Wrapping:MonthCalendar.kt$;</ID>
     <ID>Wrapping:PeriodChart.kt$;</ID>

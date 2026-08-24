@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.drklo.pomodoro.R
+import com.drklo.pomodoro.ui.ViewModelFactories
 import com.drklo.pomodoro.ui.reports.components.ChartCard
 import com.drklo.pomodoro.ui.reports.components.DonutChart
 import com.drklo.pomodoro.ui.reports.components.MonthCalendar
@@ -48,7 +49,7 @@ import kotlin.math.roundToInt
 @Composable
 fun ReportsScreen(
     onBack: () -> Unit,
-    viewModel: ReportsViewModel = viewModel()
+    viewModel: ReportsViewModel = viewModel(factory = ViewModelFactories.reports)
 ) {
     val summary by viewModel.summary.collectAsStateWithLifecycle()
     val logs by viewModel.logs.collectAsStateWithLifecycle()

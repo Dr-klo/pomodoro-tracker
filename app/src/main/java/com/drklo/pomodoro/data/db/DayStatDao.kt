@@ -6,13 +6,9 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface DayStatDao {
-
-    @Query("SELECT completedPomodoros FROM day_stats WHERE projectId = :projectId AND dayKey = :dayKey")
-    fun observeCompleted(projectId: Long, dayKey: String): Flow<Int?>
 
     @Query("SELECT * FROM day_stats WHERE projectId = :projectId AND dayKey = :dayKey")
     suspend fun get(projectId: Long, dayKey: String): DayStatEntity?

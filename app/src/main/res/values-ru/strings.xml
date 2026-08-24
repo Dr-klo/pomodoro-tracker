@@ -123,4 +123,10 @@
     <string name="action_cancel">Отмена</string>
     <!-- Shown while the first launch is still seeding the default projects. -->
     <string name="empty_no_projects">Пока нет проектов</string>
+    <!-- Fallback name when the user saves a project without typing one. -->
+    <string name="default_project_name">Помидорка</string>
+    <!-- Leaving the project editor with unsaved edits. -->
+    <string name="dialog_discard_title">Отменить изменения?</string>
+    <string name="dialog_discard_text">Правки этого проекта не сохранены.</string>
+    <string name="action_discard">Отменить</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.drklo.pomodoro.ui.settings
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -45,6 +47,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.drklo.pomodoro.R
 import com.drklo.pomodoro.data.model.Preset
+import com.drklo.pomodoro.ui.ViewModelFactories
 import com.drklo.pomodoro.ui.common.ConfirmDeleteProjectDialog
 import com.drklo.pomodoro.ui.common.Stepper
 
@@ -67,11 +70,37 @@ private val ColorPalette = listOf(
 fun ProjectEditScreen(
     projectId: Long,
     onDone: () -> Unit,
-    viewModel: ProjectEditViewModel = viewModel()
+    viewModel: ProjectEditViewModel = viewModel(factory = ViewModelFactories.projectEdit)
 ) {
     LaunchedEffect(projectId) { viewModel.load(projectId) }
     val project by viewModel.project.collectAsStateWithLifecycle()
     var confirmDelete by remember { mutableStateOf(false) }
+    var confirmDiscard by remember { mutableStateOf(false) }
+    val fallbackName = stringResource(R.string.default_project_name)
+
+    // Edits live in the ViewModel until "Save", so walking out with the arrow — or the system back
+    // gesture, which people use by reflex — used to drop them without a word.
+    val leave = { if (viewModel.hasUnsavedChanges) confirmDiscard = true else onDone() }
+    BackHandler(enabled = true) { leave() }
+
+    if (confirmDiscard) {
+        AlertDialog(
+            onDismissRequest = { confirmDiscard = false },
+            title = { Text(stringResource(R.string.dialog_discard_title)) },
+            text = { Text(stringResource(R.string.dialog_discard_text)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDiscard = false
+                    onDone()
+                }) { Text(stringResource(R.string.action_discard)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmDiscard = false }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            }
+        )
+    }
 
     if (confirmDelete) {
         ConfirmDeleteProjectDialog(
@@ -95,7 +124,7 @@ fun ProjectEditScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onDone) {
+                    IconButton(onClick = leave) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cd_back))
                     }
                 },
@@ -105,7 +134,7 @@ fun ProjectEditScreen(
                             Icon(Icons.Filled.Delete, stringResource(R.string.cd_delete))
                         }
                     }
-                    TextButton(onClick = { viewModel.save(onDone) }) {
+                    TextButton(onClick = { viewModel.save(fallbackName, onDone) }) {
                         Text(stringResource(R.string.action_save))
                     }
                 }

@@ -124,4 +124,10 @@
     <string name="action_cancel">Cancel</string>
     <!-- Shown while the first launch is still seeding the default projects. -->
     <string name="empty_no_projects">No projects yet</string>
+    <!-- Fallback name when the user saves a project without typing one. -->
+    <string name="default_project_name">Pomodoro</string>
+    <!-- Leaving the project editor with unsaved edits. -->
+    <string name="dialog_discard_title">Discard changes?</string>
+    <string name="dialog_discard_text">The edits to this project have not been saved.</string>
+    <string name="action_discard">Discard</string>
 </resources>

@@ -1,13 +1,14 @@
 package com.drklo.pomodoro.ui.reports
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.drklo.pomodoro.PomodoroApp
 import com.drklo.pomodoro.data.LogicalDay
 import com.drklo.pomodoro.data.model.GlobalSettings
 import com.drklo.pomodoro.data.model.PomodoroLog
 import com.drklo.pomodoro.data.model.Project
+import com.drklo.pomodoro.data.repository.ProjectStore
+import com.drklo.pomodoro.data.repository.StatsRepository
+import com.drklo.pomodoro.timer.SettingsSource
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -26,17 +27,19 @@ data class ReportsSummary(
     val weekPomodoros: Int = 0
 )
 
-class ReportsViewModel(app: Application) : AndroidViewModel(app) {
+class ReportsViewModel(
+    projectStore: ProjectStore,
+    statsRepository: StatsRepository,
+    settingsSource: SettingsSource
+) : ViewModel() {
 
-    private val container = (app as PomodoroApp).container
-
-    val projects: StateFlow<List<Project>> = container.projectRepository.allProjects
+    val projects: StateFlow<List<Project>> = projectStore.allProjects
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val logs: StateFlow<List<PomodoroLog>> = container.statsRepository.observeLog()
+    val logs: StateFlow<List<PomodoroLog>> = statsRepository.observeLog()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    private val settings: StateFlow<GlobalSettings> = container.settingsRepository.settings
+    private val settings: StateFlow<GlobalSettings> = settingsSource.settings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GlobalSettings())
 
     /**

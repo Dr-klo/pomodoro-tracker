@@ -36,6 +36,9 @@ class SettingsRepository(private val context: Context) : SettingsSource {
         val DAY_END_MINUTE = intPreferencesKey("day_end_minute")
         val LANGUAGE = stringPreferencesKey("language")
         val THEME = stringPreferencesKey("theme_mode")
+
+        /** Set once the default projects have been created; see ProjectRepository.ensureSeeded. */
+        val SEEDED = booleanPreferencesKey("projects_seeded")
     }
 
     override val settings: Flow<GlobalSettings> = context.dataStore.data.catch { e ->
@@ -79,6 +82,10 @@ class SettingsRepository(private val context: Context) : SettingsSource {
         it[Keys.DAY_END_HOUR] = hour.coerceIn(0, 23)
         it[Keys.DAY_END_MINUTE] = minute.coerceIn(0, 59)
     }
+
+    suspend fun wasSeeded(): Boolean = context.dataStore.data.first()[Keys.SEEDED] ?: false
+
+    suspend fun markSeeded() = edit { it[Keys.SEEDED] = true }
 
     suspend fun setLanguage(language: AppLanguage) = edit { it[Keys.LANGUAGE] = language.tag }
     suspend fun setThemeMode(mode: ThemeMode) = edit { it[Keys.THEME] = mode.name }

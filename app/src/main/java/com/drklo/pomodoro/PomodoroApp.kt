@@ -34,7 +34,10 @@ class PomodoroApp : Application() {
         super.onCreate()
         container = AppContainer(this)
         appScope.launch {
-            container.projectRepository.ensureSeeded()
+            val settings = container.settingsRepository
+            if (container.projectRepository.ensureSeeded(settings.wasSeeded())) {
+                settings.markSeeded()
+            }
         }
         // Whoever started the process — the launcher or a resurrected service — the reports must
         // format dates in the language the user picked, so the JVM default is set here and follows

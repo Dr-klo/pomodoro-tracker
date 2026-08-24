@@ -1,23 +1,22 @@
 package com.drklo.pomodoro.ui.settings
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.drklo.pomodoro.PomodoroApp
 import com.drklo.pomodoro.data.model.AppLanguage
 import com.drklo.pomodoro.data.model.GlobalSettings
 import com.drklo.pomodoro.data.model.Project
 import com.drklo.pomodoro.data.model.ThemeMode
+import com.drklo.pomodoro.data.repository.ProjectStore
+import com.drklo.pomodoro.data.repository.SettingsRepository
 import com.drklo.pomodoro.util.launchSafely
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 
-class SettingsViewModel(app: Application) : AndroidViewModel(app) {
-
-    private val container = (app as PomodoroApp).container
-    private val settingsRepo = container.settingsRepository
-    private val projectRepo = container.projectRepository
+class SettingsViewModel(
+    private val settingsRepo: SettingsRepository,
+    private val projectRepo: ProjectStore
+) : ViewModel() {
 
     val settings: StateFlow<GlobalSettings> = settingsRepo.settings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GlobalSettings())

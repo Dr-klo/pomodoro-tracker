@@ -3,11 +3,13 @@ package com.drklo.pomodoro.ui.main
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.drklo.pomodoro.PomodoroApp
 import com.drklo.pomodoro.data.model.GlobalSettings
 import com.drklo.pomodoro.data.model.Phase
 import com.drklo.pomodoro.data.model.Project
 import com.drklo.pomodoro.data.model.TimerStatus
+import com.drklo.pomodoro.data.repository.ProjectStore
+import com.drklo.pomodoro.timer.SettingsSource
+import com.drklo.pomodoro.timer.TimerEngine
 import com.drklo.pomodoro.timer.TimerEvent
 import com.drklo.pomodoro.timer.TimerService
 import com.drklo.pomodoro.timer.TimerState
@@ -18,17 +20,19 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 
-class MainViewModel(app: Application) : AndroidViewModel(app) {
-
-    private val container = (app as PomodoroApp).container
-    private val engine = container.timerEngine
+class MainViewModel(
+    app: Application,
+    private val engine: TimerEngine,
+    projectStore: ProjectStore,
+    settingsSource: SettingsSource
+) : AndroidViewModel(app) {
 
     val timerState: StateFlow<TimerState> = engine.state
 
-    val projects: StateFlow<List<Project>> = container.projectRepository.projects
+    val projects: StateFlow<List<Project>> = projectStore.projects
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val settings: StateFlow<GlobalSettings> = container.settingsRepository.settings
+    val settings: StateFlow<GlobalSettings> = settingsSource.settings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GlobalSettings())
 
     /**

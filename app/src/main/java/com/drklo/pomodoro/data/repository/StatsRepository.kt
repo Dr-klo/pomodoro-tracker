@@ -18,10 +18,6 @@ class StatsRepository(private val db: AppDatabase) : PomodoroStats {
     private val dao: DayStatDao = db.dayStatDao()
     private val logDao: PomodoroLogDao = db.pomodoroLogDao()
 
-    /** Observes the completed-pomodoro count for a project on a given logical day. */
-    fun observeCompleted(projectId: Long, dayKey: String): Flow<Int> =
-        dao.observeCompleted(projectId, dayKey).map { it ?: 0 }
-
     override suspend fun completedCount(projectId: Long, dayKey: String): Int =
         dao.get(projectId, dayKey)?.completedPomodoros ?: 0
 

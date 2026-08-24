@@ -58,6 +58,7 @@ import com.drklo.pomodoro.data.model.Project
 import com.drklo.pomodoro.data.model.TimerStatus
 import com.drklo.pomodoro.timer.TimerState
 import com.drklo.pomodoro.timer.formatMmSs
+import com.drklo.pomodoro.ui.ViewModelFactories
 import com.drklo.pomodoro.ui.main.components.Fanfare
 import com.drklo.pomodoro.ui.main.components.PausedBookmark
 import com.drklo.pomodoro.ui.main.components.SessionBullets
@@ -78,7 +79,7 @@ fun MainScreen(
     onOpenSettings: () -> Unit,
     onOpenReports: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: MainViewModel = viewModel()
+    viewModel: MainViewModel = viewModel(factory = ViewModelFactories.main)
 ) {
     val state by viewModel.timerState.collectAsStateWithLifecycle()
     val projects by viewModel.projects.collectAsStateWithLifecycle()

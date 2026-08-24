@@ -10,27 +10,32 @@ import com.drklo.pomodoro.data.model.Project
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class ProjectRepository(private val db: AppDatabase) {
+class ProjectRepository(private val db: AppDatabase) : ProjectStore {
 
     private val dao: ProjectDao = db.projectDao()
 
     /** What the carousel and the settings list show: everything the user can still pick. */
-    val projects: Flow<List<Project>> =
+    override val projects: Flow<List<Project>> =
         dao.observeActive().map { list -> list.map(ProjectEntity::toDomain) }
 
     /** What the reports read: archived projects still own their history and must keep naming it. */
-    val allProjects: Flow<List<Project>> =
+    override val allProjects: Flow<List<Project>> =
         dao.observeAll().map { list -> list.map(ProjectEntity::toDomain) }
 
-    suspend fun getById(id: Long): Project? = dao.getById(id)?.toDomain()
+    override suspend fun getById(id: Long): Project? = dao.getById(id)?.toDomain()
 
-    /** Inserts a new project at the end of the carousel; returns the generated id. */
-    suspend fun add(project: Project): Long {
+    /**
+     * Inserts a new project at the end of the carousel; returns the generated id. Reading the last
+     * position and inserting must be one operation: two adds racing over the same `maxOrderIndex`
+     * produce two projects claiming the same slot, and `ORDER BY orderIndex, id` stops being a
+     * stable answer to "what comes after what".
+     */
+    override suspend fun add(project: Project): Long = db.withTransaction {
         val nextOrder = dao.maxOrderIndex() + 1
-        return dao.insert(project.copy(id = 0, orderIndex = nextOrder).toEntity())
+        dao.insert(project.copy(id = 0, orderIndex = nextOrder).toEntity())
     }
 
-    suspend fun update(project: Project) = dao.update(project.toEntity())
+    override suspend fun update(project: Project) = dao.update(project.toEntity())
 
     /**
      * Removes [project] from the carousel while keeping its history readable (F-R2-01). Refuses to
@@ -38,20 +43,24 @@ class ProjectRepository(private val db: AppDatabase) {
      * show and no way back (F-R5-03), so the rule is enforced here and not only by a greyed-out
      * button. Returns false when the request was refused.
      */
-    suspend fun archive(
-        project: Project,
-        now: Long = System.currentTimeMillis()
-    ): Boolean = db.withTransaction {
+    override suspend fun archive(project: Project, now: Long): Boolean = db.withTransaction {
         if (dao.countActive() <= 1) return@withTransaction false
         dao.archive(project.id, now)
         true
     }
 
     /** Populates default projects on first launch. */
-    suspend fun ensureSeeded() {
-        if (dao.count() == 0) {
-            dao.insertAll(DefaultProjects.entities())
-        }
+    /**
+     * Creates the default projects, once ever. "Once" is recorded as a flag rather than inferred
+     * from an empty table: an empty table is also what a user who cleared everything out sees, and
+     * silently handing them "Работа / Учёба / Чтение" back on the next launch is not seeding, it is
+     * overruling them. The check and the insert share a transaction so two starts cannot both pass
+     * it. Returns true if it seeded now.
+     */
+    suspend fun ensureSeeded(alreadySeeded: Boolean): Boolean = db.withTransaction {
+        if (alreadySeeded || dao.count() > 0) return@withTransaction false
+        dao.insertAll(DefaultProjects.entities())
+        true
     }
 }
 

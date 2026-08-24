@@ -20,7 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -53,7 +53,7 @@ class TimerService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        val tag = (application as PomodoroApp).container.settingsRepository.currentLanguage().tag
+        val tag = (application as PomodoroApp).languageTag
         localized = LocaleHelper.wrap(this, tag)
         createChannel()
     }
@@ -66,12 +66,18 @@ class TimerService : Service() {
         startForeground(NOTIFICATION_ID, buildNotification())
         if (observeJob == null) {
             observeJob = scope.launch {
-                engine.state.collectLatest { state ->
+                // The delay after each post is the rate limit: a StateFlow conflates by nature, so
+                // whatever the timer does while we wait collapses into a single latest value.
+                // Scrubbing the dial emits on every touch move, and one notify() per move floods
+                // NotificationManager until Android starts dropping updates ("has posted too many
+                // notifications") — paying IPC and a shade redraw for each one on the way there.
+                engine.state.collect { state ->
                     if (state.status == TimerStatus.IDLE) {
                         stopSelf()
-                    } else {
-                        notificationManager().notify(NOTIFICATION_ID, buildNotification())
+                        return@collect
                     }
+                    notificationManager().notify(NOTIFICATION_ID, buildNotification())
+                    delay(MIN_NOTIFICATION_INTERVAL_MS)
                 }
             }
         }
@@ -162,6 +168,9 @@ class TimerService : Service() {
     companion object {
         private const val CHANNEL_ID = "timer_channel"
         private const val NOTIFICATION_ID = 1001
+
+        /** The countdown only ever shows whole seconds, so posting faster than this buys nothing. */
+        private const val MIN_NOTIFICATION_INTERVAL_MS = 250L
         private const val ACTION_TOGGLE = "com.drklo.pomodoro.action.TOGGLE"
         private const val ACTION_RESET = "com.drklo.pomodoro.action.RESET"
 

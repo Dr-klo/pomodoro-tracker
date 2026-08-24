@@ -64,10 +64,11 @@ import com.drklo.pomodoro.ui.main.components.SessionBullets
 import com.drklo.pomodoro.ui.main.components.TimerDial
 import com.drklo.pomodoro.ui.theme.DefaultPomodoroColor
 import com.drklo.pomodoro.util.findActivity
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** Hide the system bars after this much inactivity on the main screen. */
 private const val IDLE_HIDE_MS = 3_000L
@@ -107,11 +108,21 @@ fun MainScreen(
         }
     }
     var barsVisible by remember { mutableStateOf(true) }
-    var interactionTick by remember { mutableIntStateOf(0) }
-    LaunchedEffect(interactionTick) {
-        barsVisible = true
-        delay(IDLE_HIDE_MS)
-        barsVisible = false
+    // Touches are reported through a channel rather than a counter in state. A counter has to be
+    // read in composition to key the effect, so every pointer event — dozens a second during a drag
+    // — recomposed the whole screen, pager pages included, and restarted the hide coroutine.
+    val interactions = remember { Channel<Unit>(Channel.CONFLATED) }
+    LaunchedEffect(interactions) {
+        while (true) {
+            interactions.receive()
+            barsVisible = true
+            // Every further touch restarts the countdown; only silence for the whole IDLE_HIDE_MS
+            // hides the bars.
+            while (withTimeoutOrNull(IDLE_HIDE_MS) { interactions.receive() } != null) {
+                // keep waiting
+            }
+            barsVisible = false
+        }
     }
     LaunchedEffect(barsVisible, insetsController) {
         val bars = WindowInsetsCompat.Type.systemBars()
@@ -182,7 +193,7 @@ fun MainScreen(
                 awaitPointerEventScope {
                     while (true) {
                         awaitPointerEvent(PointerEventPass.Initial)
-                        interactionTick++
+                        interactions.trySend(Unit)
                     }
                 }
             }
@@ -196,18 +207,19 @@ fun MainScreen(
             val isActive = project.id == state.project?.id
             ProjectPage(
                 project = project,
-                state = state,
-                isActive = isActive,
+                state = state.takeIf { isActive },
                 isLandscape = isLandscape,
                 holdFinishedColor = settings.holdFinishedPhaseColor,
-                // Tapping a different project while one is paused is blocked; nudge the bookmark.
-                onTap = {
-                    if (isActive) viewModel.onPlayPause()
-                    else if (pausedProject != null) shakeTrigger++
-                },
-                onReset = { if (isActive) viewModel.onReset() },
-                onSeek = { if (isActive) viewModel.onSeek(it) },
-                onChangePhase = { if (isActive) viewModel.onChangePhase() }
+                actions = PageActions(
+                    // Tapping a different project while one is paused is blocked; nudge the bookmark.
+                    onTap = {
+                        if (isActive) viewModel.onPlayPause()
+                        else if (pausedProject != null) shakeTrigger++
+                    },
+                    onReset = { if (isActive) viewModel.onReset() },
+                    onSeek = { if (isActive) viewModel.onSeek(it) },
+                    onChangePhase = { if (isActive) viewModel.onChangePhase() }
+                )
             )
         }
 
@@ -265,6 +277,14 @@ fun MainScreen(
     }
 }
 
+/** What a carousel page can do; they always travel together, so they travel as one. */
+private data class PageActions(
+    val onTap: () -> Unit,
+    val onReset: () -> Unit,
+    val onSeek: (Float) -> Unit,
+    val onChangePhase: () -> Unit
+)
+
 /** Placeholder shown while there is no project to draw — never a blank, uncontrollable screen. */
 @Composable
 private fun EmptyProjects(onOpenSettings: () -> Unit) {
@@ -297,22 +317,31 @@ private fun EmptyProjects(onOpenSettings: () -> Unit) {
 @Composable
 private fun ProjectPage(
     project: Project,
-    state: TimerState,
-    isActive: Boolean,
+    /**
+     * Live timer state, or null for a page that is merely being browsed. Passing the whole state to
+     * every page meant all of them recomposed once a second, redrawing canvases for projects that
+     * only ever show a static preview.
+     */
+    state: TimerState?,
     isLandscape: Boolean,
     holdFinishedColor: Boolean,
-    onTap: () -> Unit,
-    onReset: () -> Unit,
-    onSeek: (Float) -> Unit,
-    onChangePhase: () -> Unit
+    actions: PageActions
 ) {
+    val onTap = actions.onTap
+    val onReset = actions.onReset
+    val onSeek = actions.onSeek
+    val onChangePhase = actions.onChangePhase
     // The page reflects live state only for the active project; others show an idle preview.
-    val phase = if (isActive) state.phase else Phase.POMODORO
-    val status = if (isActive) state.status else TimerStatus.IDLE
+    val isActive = state != null
+    val phase = state?.phase ?: Phase.POMODORO
+    val status = state?.status ?: TimerStatus.IDLE
     val fraction =
-        if (isActive && state.totalSeconds > 0) state.remainingSeconds.toFloat() / state.totalSeconds
-        else 1f
-    val filledBullets = if (isActive) state.completedInSession else 0
+        if (state != null && state.totalSeconds > 0) {
+            state.remainingSeconds.toFloat() / state.totalSeconds
+        } else {
+            1f
+        }
+    val filledBullets = state?.completedInSession ?: 0
 
     // Phase color is the BACKGROUND; foreground stays white (#3).
     // While awaiting the next phase (a phase finished but isn't auto-started) keep showing the COLOR
@@ -323,8 +352,8 @@ private fun ProjectPage(
     val phaseColor = Color(project.colorFor(phase))
     val oppositeColor =
         Color(if (phase == Phase.POMODORO) project.breakColor else project.pomodoroColor)
-    val awaiting = holdFinishedColor && isActive && state.awaitingNext && status == TimerStatus.IDLE
-    val flip = isActive && state.idleAlertActive
+    val awaiting = holdFinishedColor && state?.awaitingNext == true && status == TimerStatus.IDLE
+    val flip = state?.idleAlertActive == true
     val bgColor: Color = when {
         awaiting -> if (flip) phaseColor else oppositeColor // hold finished color; strobe to upcoming
         flip -> oppositeColor
@@ -340,7 +369,7 @@ private fun ProjectPage(
         }
     )
     val minutes = project.durationSecondsFor(phase) / 60
-    val timeText = if (isActive && status != TimerStatus.IDLE) {
+    val timeText = if (state != null && status != TimerStatus.IDLE) {
         formatMmSs(state.remainingSeconds)
     } else {
         "$minutes ${stringResource(R.string.minutes_short)}"

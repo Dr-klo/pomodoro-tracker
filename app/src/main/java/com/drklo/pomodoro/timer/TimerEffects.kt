@@ -7,6 +7,11 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import java.io.File
 
 /**
@@ -27,7 +32,12 @@ class TimerEffects(context: Context) : PhaseFeedback {
         )
         .build()
 
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    @Volatile
     private var startSoundId: Int = 0
+
+    @Volatile
     private var endSoundId: Int = 0
 
     private val vibrator: Vibrator? by lazy {
@@ -41,22 +51,32 @@ class TimerEffects(context: Context) : PhaseFeedback {
     }
 
     init {
-        runCatching {
-            val dir = appContext.cacheDir
-            val startFile = File(dir, "tone_start.wav")
-            val endFile = File(dir, "tone_end.wav")
-            // Short higher click for start.
-            ToneSynth.writeBell(
-                startFile, freqs = doubleArrayOf(1568.0), weights = doubleArrayOf(1.0),
-                durationSec = 0.16, decay = 22.0
-            )
-            // Clear two-harmonic "ding" for the end of an interval.
-            ToneSynth.writeBell(
-                endFile, freqs = doubleArrayOf(1318.5, 2637.0), weights = doubleArrayOf(1.0, 0.45),
-                durationSec = 0.6, decay = 6.5
-            )
-            startSoundId = soundPool.load(startFile.absolutePath, 1)
-            endSoundId = soundPool.load(endFile.absolutePath, 1)
+        // Synthesizing two WAVs is tens of thousands of sin/exp samples plus disk writes, and this
+        // object is built lazily from the first ViewModel — i.e. on the main thread, at cold start.
+        // Off the main thread it is, and already-generated files are reused instead of rewritten.
+        scope.launch {
+            runCatching {
+                val dir = appContext.cacheDir
+                val startFile = File(dir, "tone_start.wav")
+                val endFile = File(dir, "tone_end.wav")
+                if (!startFile.exists()) {
+                    // Short higher click for start.
+                    ToneSynth.writeBell(
+                        startFile, freqs = doubleArrayOf(1568.0), weights = doubleArrayOf(1.0),
+                        durationSec = 0.16, decay = 22.0
+                    )
+                }
+                if (!endFile.exists()) {
+                    // Clear two-harmonic "ding" for the end of an interval.
+                    ToneSynth.writeBell(
+                        endFile, freqs = doubleArrayOf(1318.5, 2637.0),
+                        weights = doubleArrayOf(1.0, 0.45),
+                        durationSec = 0.6, decay = 6.5
+                    )
+                }
+                startSoundId = soundPool.load(startFile.absolutePath, 1)
+                endSoundId = soundPool.load(endFile.absolutePath, 1)
+            }.onFailure { Log.e(TAG, "Could not prepare the timer tones", it) }
         }
     }
 
@@ -77,6 +97,7 @@ class TimerEffects(context: Context) : PhaseFeedback {
     }
 
     private companion object {
+        const val TAG = "TimerEffects"
         const val DEFAULT_VIBRATION_MS = 400L
     }
 }

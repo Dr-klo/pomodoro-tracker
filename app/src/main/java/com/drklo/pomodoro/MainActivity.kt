@@ -36,7 +36,10 @@ class MainActivity : ComponentActivity() {
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* no-op */ }
 
     override fun attachBaseContext(newBase: Context) {
-        val tag = SettingsRepository(newBase).currentLanguage().tag
+        // Application.onCreate has already run by now, so the language is in memory: no disk read on
+        // the main thread, and no second SettingsRepository outside AppContainer.
+        val app = newBase.applicationContext as? PomodoroApp
+        val tag = app?.languageTag ?: SettingsRepository(newBase).currentLanguage().tag
         super.attachBaseContext(LocaleHelper.wrap(newBase, tag))
     }
 

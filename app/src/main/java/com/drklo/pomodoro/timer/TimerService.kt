@@ -39,6 +39,9 @@ class TimerService : Service() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var observeJob: Job? = null
 
+    /** Last posted appearance; see [notificationSignature]. */
+    private var lastSignature: String? = null
+
     private val engine: TimerEngine
         get() = (application as PomodoroApp).container.timerEngine
 
@@ -76,7 +79,14 @@ class TimerService : Service() {
                         stopSelf()
                         return@collect
                     }
-                    notificationManager().notify(NOTIFICATION_ID, buildNotification())
+                    // The countdown itself is drawn by the system chronometer, so a re-post is only
+                    // worth it when something else moved: the phase, the run state, or the progress
+                    // bar's next step. Re-posting every second is what made the shade flicker.
+                    val signature = state.notificationSignature()
+                    if (signature != lastSignature) {
+                        lastSignature = signature
+                        notificationManager().notify(NOTIFICATION_ID, buildNotification())
+                    }
                     delay(MIN_NOTIFICATION_INTERVAL_MS)
                 }
             }
@@ -98,7 +108,7 @@ class TimerService : Service() {
             Phase.LONG_BREAK -> localized.getString(R.string.phase_long_break)
         }
         val title = state.project?.name?.let { "$it · $phaseText" } ?: phaseText
-        val text = formatMmSs(state.remainingSeconds)
+        val elapsed = (state.totalSeconds - state.remainingSeconds).coerceAtLeast(0)
 
         val openIntent = PendingIntent.getActivity(
             this,
@@ -110,12 +120,30 @@ class TimerService : Service() {
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_timer_notification)
             .setContentTitle(title)
-            .setContentText(text)
             .setContentIntent(openIntent)
             .setOnlyAlertOnce(true)
             .setOngoing(true)
             .setSilent(true)
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
+            // How far through the phase, without having to read the digits.
+            .setProgress(state.totalSeconds.coerceAtLeast(1), elapsed, false)
+            // Public: the timer is the reason the phone is on the desk, so it belongs on the lock
+            // screen. There is nothing private in "Работа · Помодоро".
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+
+        if (state.status == TimerStatus.RUNNING) {
+            // Hand the second-by-second countdown to the system: it ticks the chronometer itself,
+            // so the app does not have to re-post the notification once a second to keep it honest.
+            builder.setUsesChronometer(true)
+                .setChronometerCountDown(true)
+                .setWhen(System.currentTimeMillis() + state.remainingSeconds * MILLIS_PER_SECOND)
+                .setShowWhen(true)
+        } else {
+            // Parked: a chronometer would keep counting, so the frozen time is plain text.
+            builder.setUsesChronometer(false)
+                .setShowWhen(false)
+                .setContentText(formatMmSs(state.remainingSeconds))
+        }
 
         // Pause/Resume + Reset controls (F-101).
         if (state.status == TimerStatus.RUNNING) {
@@ -158,6 +186,7 @@ class TimerService : Service() {
         ).apply {
             description = localized.getString(R.string.timer_channel_desc)
             setShowBadge(false)
+            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         }
         notificationManager().createNotificationChannel(channel)
     }
@@ -165,12 +194,31 @@ class TimerService : Service() {
     private fun notificationManager(): NotificationManager =
         getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
+    /**
+     * What the notification would look like. Everything the user can see except the ticking
+     * seconds, which the system draws on its own — so an unchanged signature means a re-post would
+     * redraw the shade for nothing.
+     */
+    private fun TimerState.notificationSignature(): String {
+        val step = if (totalSeconds > 0) {
+            (totalSeconds - remainingSeconds) * PROGRESS_STEPS / totalSeconds
+        } else {
+            0
+        }
+        return "$status|$phase|${project?.id}|$step"
+    }
+
     companion object {
         private const val CHANNEL_ID = "timer_channel"
         private const val NOTIFICATION_ID = 1001
 
         /** The countdown only ever shows whole seconds, so posting faster than this buys nothing. */
         private const val MIN_NOTIFICATION_INTERVAL_MS = 250L
+
+        private const val MILLIS_PER_SECOND = 1000L
+
+        /** Progress-bar resolution; finer steps would only mean more re-posts nobody can see. */
+        private const val PROGRESS_STEPS = 100
         private const val ACTION_TOGGLE = "com.drklo.pomodoro.action.TOGGLE"
         private const val ACTION_RESET = "com.drklo.pomodoro.action.RESET"
 

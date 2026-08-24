@@ -74,6 +74,16 @@ class TimerEngine(
         launchGuarded("observe settings") {
             settingsSource.settings.collect { value -> synchronized(lock) { settings = value } }
         }
+        // The day boundary has to be noticed even when nobody touches the phone. With the screen
+        // kept on (F-011) the app never leaves the foreground, so the ON_START check never fires:
+        // you come back in the morning to yesterday's filled bullets and the feeling of having
+        // already done something. A minute's granularity is plenty for a boundary measured in days.
+        launchGuarded("watch for the day boundary") {
+            while (true) {
+                delay(DAY_WATCH_INTERVAL_MS)
+                refreshForNewDayIfNeeded()
+            }
+        }
     }
 
     // --- User actions ---------------------------------------------------------------------
@@ -479,6 +489,7 @@ class TimerEngine(
     private companion object {
         const val TAG = "TimerEngine"
         const val TICK_INTERVAL_MS = 200L
+        const val DAY_WATCH_INTERVAL_MS = 60_000L
         const val MILLIS_PER_SECOND = 1000L
         const val MILLIS_PER_MINUTE = 60_000L
         const val IDLE_STROBE_BLINKS = 3

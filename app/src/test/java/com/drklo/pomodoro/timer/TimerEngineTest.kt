@@ -468,6 +468,44 @@ class TimerEngineTest {
     }
 
     @Test
+    fun `sitting idle across the day boundary clears yesterday's session`() = runTest {
+        // Screen kept on, app never leaves the foreground, so nothing calls the ON_START check:
+        // this has to be noticed by the engine itself. Boundary 01:00, three pomodoros yesterday.
+        val h = harness(
+            settings = GlobalSettings(dayEndHour = 1),
+            startAt = LocalDateTime.of(2026, 5, 13, 0, 40),
+            stats = FakeStats(mapOf((work.id to "2026-05-12") to 3))
+        )
+        h.engine.setActiveProject(work)
+        runCurrent()
+        assertEquals(3, h.state.completedToday)
+
+        // Nobody touches the phone; the clock simply passes 01:00.
+        advance(30 * 60_000L)
+
+        assertEquals("yesterday's bullets must not greet the morning", 0, h.state.completedToday)
+        assertEquals(0, h.state.completedInSession)
+    }
+
+    @Test
+    fun `a running phase is not interrupted by the boundary watcher`() = runTest {
+        val h = harness(
+            settings = GlobalSettings(dayEndHour = 1),
+            startAt = LocalDateTime.of(2026, 5, 13, 0, 40),
+            stats = FakeStats(mapOf((work.id to "2026-05-12") to 3))
+        )
+        h.engine.setActiveProject(work)
+        runCurrent()
+        h.engine.togglePlayPause()
+
+        advance(21 * 60_000L)
+
+        // Still counting down through the boundary; the rollover happens when the phase ends.
+        assertEquals(TimerStatus.RUNNING, h.state.status)
+        assertEquals(4 * 60, h.state.remainingSeconds)
+    }
+
+    @Test
     fun `starting by hand dings and buzzes once`() = runTest {
         val h = harness()
         h.engine.setActiveProject(work)

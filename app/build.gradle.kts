@@ -58,13 +58,22 @@ android {
                 storePassword = keystoreProps.getProperty("storePassword")
                 keyAlias = keystoreProps.getProperty("keyAlias")
                 keyPassword = keystoreProps.getProperty("keyPassword")
+                // v3 carries the key-rotation record. The app is distributed as APK files and
+                // lives entirely on this signature, so without v3 a compromised key could never be
+                // replaced without orphaning every existing install. v4 is left off: it emits a
+                // separate .idsig that only speeds up `adb install --incremental`.
+                enableV3Signing = true
             }
         }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // Without R8 the APK was 41.7 MB, of which 42 MB was dex: material-icons-extended
+            // compiles thousands of icons and the app draws eleven of them. Shrinking is what makes
+            // the download reasonable for something handed out as a file.
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

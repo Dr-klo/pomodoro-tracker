@@ -4,8 +4,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.drklo.pomodoro.data.model.TimerStatus
 import kotlinx.coroutines.delay
@@ -53,7 +55,8 @@ fun TimerDial(
     showHand: Boolean,
     onTap: () -> Unit,
     onSeek: (Float) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    tapLabel: String? = null
 ) {
     val trackColor = color.copy(alpha = 0.25f)
     // Latest values captured for the gesture handlers, which outlive a single composition.
@@ -79,9 +82,16 @@ fun TimerDial(
     Box(
         modifier = modifier
             .aspectRatio(1f)
-            .pointerInput(Unit) {
-                detectTapGestures(onTap = { onTap() })
-            }
+            // A real clickable rather than detectTapGestures: raw pointer input is invisible to
+            // accessibility services, so the app's main control could not be reached or activated
+            // by a screen reader (F-R0-01). Indication is suppressed to keep the dial's look, and a
+            // drag is not mistaken for a click, so scrubbing still works.
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                role = Role.Button,
+                onClickLabel = tapLabel
+            ) { onTap() }
             .pointerInput(Unit) {
                 // Drag anywhere on the dial to rotate the remaining-time sector. We accumulate the
                 // angular delta around the center (robust to the wrap at 12 o'clock) and translate

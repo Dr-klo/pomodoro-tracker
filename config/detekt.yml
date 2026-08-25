@@ -10,6 +10,12 @@ complexity:
   LongMethod:
     # Composable layout functions are long by nature: they describe a tree, not an algorithm.
     ignoreAnnotated: ['Composable']
+  LongParameterList:
+    # For a composable the parameter list *is* the component's API — colours, state and callbacks
+    # passed in by the caller. A threshold meant for behavioural functions turns every reusable
+    # component into a finding, and the fix it implies (bundling unrelated values into a holder
+    # just to get under six) makes the call sites worse.
+    ignoreAnnotated: ['Composable']
 
 style:
   MagicNumber:

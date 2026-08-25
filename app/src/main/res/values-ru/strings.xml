@@ -18,6 +18,15 @@
     <string name="action_reset">Сброс</string>
     <string name="cd_settings">Настройки</string>
     <string name="cd_play_pause">Старт или пауза</string>
+    <!-- Озвучивается для циферблата: что делает таймер и сколько осталось от фазы. -->
+    <string name="cd_dial_running">Идёт, осталось %1$s из %2$s</string>
+    <string name="cd_dial_paused">Пауза, осталось %1$s из %2$s</string>
+    <string name="cd_dial_idle">Остановлено, %1$s, %2$s</string>
+    <string name="cd_action_start">запустить</string>
+    <string name="cd_action_pause">поставить на паузу</string>
+    <string name="cd_action_resume">продолжить</string>
+    <string name="cd_action_change_phase">сменить фазу</string>
+    <string name="cd_session_progress">Помидорок сделано: %1$d из %2$d</string>
 
     <!-- Reports -->
     <string name="title_reports">Отчёты</string>

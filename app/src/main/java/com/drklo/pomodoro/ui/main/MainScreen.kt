@@ -42,6 +42,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -387,6 +390,25 @@ private fun ProjectPage(
     val canChangePhase = isActive && status != TimerStatus.RUNNING
     val showReset = isActive && status == TimerStatus.PAUSED
 
+    // Accessibility for the dial (F-R0-01). It is the app's primary control — tap to start or
+    // pause — but it is built from raw pointer input over a Canvas, so without this a screen reader
+    // finds an unlabelled box and the main function of the app is unreachable. The description is
+    // assembled here rather than inside TimerDial because this is where the phase and the remaining
+    // time are known.
+    val dialLabel = stringResource(R.string.cd_play_pause)
+    val totalText = "$minutes ${stringResource(R.string.minutes_unit)}"
+    val dialState = when (status) {
+        TimerStatus.RUNNING -> stringResource(R.string.cd_dial_running, timeText, totalText)
+        TimerStatus.PAUSED -> stringResource(R.string.cd_dial_paused, timeText, totalText)
+        TimerStatus.IDLE -> stringResource(R.string.cd_dial_idle, phaseName, totalText)
+    }
+    val tapActionLabel = when (status) {
+        TimerStatus.RUNNING -> stringResource(R.string.cd_action_pause)
+        TimerStatus.PAUSED -> stringResource(R.string.cd_action_resume)
+        TimerStatus.IDLE -> stringResource(R.string.cd_action_start)
+    }
+    val changePhaseLabel = stringResource(R.string.cd_action_change_phase)
+
     val dial = @Composable { dialModifier: Modifier ->
         TimerDial(
             fraction = fraction,
@@ -395,12 +417,32 @@ private fun ProjectPage(
             showHand = status == TimerStatus.RUNNING,
             onTap = onTap,
             onSeek = onSeek,
-            modifier = dialModifier
+            tapLabel = tapActionLabel,
+            // Role and the click action come from the dial's own `clickable`; what only this scope
+            // knows is what the timer is currently doing, so that is what it contributes.
+            modifier = dialModifier.semantics(mergeDescendants = true) {
+                contentDescription = dialLabel
+                stateDescription = dialState
+            }
         )
     }
 
     val details = @Composable {
-        SessionBullets(filled = filledBullets, total = project.pomodorosPerSession, color = fg)
+        // A row of circles says nothing out loud. Merged into one node so a screen reader announces
+        // the progress once instead of walking eight unlabelled dots.
+        val bulletsDescription = stringResource(
+            R.string.cd_session_progress,
+            filledBullets,
+            project.pomodorosPerSession
+        )
+        SessionBullets(
+            filled = filledBullets,
+            total = project.pomodorosPerSession,
+            color = fg,
+            modifier = Modifier.semantics(mergeDescendants = true) {
+                contentDescription = bulletsDescription
+            }
+        )
         Spacer(Modifier.height(12.dp))
         Text(text = project.name, fontSize = 22.sp, fontWeight = FontWeight.Medium, color = fg)
         Spacer(Modifier.height(6.dp))
@@ -410,7 +452,13 @@ private fun ProjectPage(
             fontSize = 18.sp,
             fontWeight = FontWeight.Medium,
             color = fg.copy(alpha = 0.9f),
-            modifier = if (canChangePhase) Modifier.clickable { onChangePhase() } else Modifier
+            // The label reads as "Pomodoro"; onClickLabel is what tells a screen reader that
+            // activating it switches phase, which is not guessable from the text.
+            modifier = if (canChangePhase) {
+                Modifier.clickable(onClickLabel = changePhaseLabel) { onChangePhase() }
+            } else {
+                Modifier
+            }
         )
         Spacer(Modifier.height(2.dp))
         Text(text = timeText, fontSize = 40.sp, fontWeight = FontWeight.SemiBold, color = fg)

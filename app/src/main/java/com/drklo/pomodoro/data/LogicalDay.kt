@@ -27,7 +27,10 @@ object LogicalDay {
         dayEndMinute: Int
     ): LocalDate {
         val boundary = LocalTime.of(dayEndHour.coerceIn(0, 23), dayEndMinute.coerceIn(0, 59))
-        return if (now.toLocalTime().isBefore(boundary)) now.toLocalDate().minusDays(1)
-        else now.toLocalDate()
+        return if (now.toLocalTime().isBefore(boundary)) {
+            now.toLocalDate().minusDays(1)
+        } else {
+            now.toLocalDate()
+        }
     }
 }

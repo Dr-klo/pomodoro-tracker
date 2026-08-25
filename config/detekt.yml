@@ -10,3 +10,23 @@ complexity:
   LongMethod:
     # Composable layout functions are long by nature: they describe a tree, not an algorithm.
     ignoreAnnotated: ['Composable']
+
+style:
+  MagicNumber:
+    # A number bound to a name is not magic any more — naming it is the fix the rule asks for, and
+    # flagging the declaration that does the naming punishes the fix.
+    ignorePropertyDeclaration: true
+    # An enum entry's arguments are described by the entry's own name: CLASSIC(25, 5) reads better
+    # than the same numbers hidden behind constants.
+    ignoreEnums: true
+    # Colour palettes are data, not logic. In these two files the literal *is* the definition, and
+    # a name in front of every swatch would add words without adding meaning. Everywhere else the
+    # rule stays on, including the chart geometry.
+    excludes:
+      # Restated from detekt's own defaults: naming an `excludes` list replaces the default one
+      # rather than adding to it, and dropping these would flag every literal in a test — where the
+      # literal is the point.
+      - '**/test/**'
+      - '**/androidTest/**'
+      - '**/ui/theme/Color.kt'
+      - '**/ui/settings/ProjectEditScreen.kt'

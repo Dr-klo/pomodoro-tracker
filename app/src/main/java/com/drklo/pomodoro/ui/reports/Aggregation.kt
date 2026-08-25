@@ -221,8 +221,11 @@ fun buildStackedBars(
         val perProject = sums[i]
         val segments = projects.mapNotNull { p ->
             val m = perProject[p.id] ?: return@mapNotNull null
-            if (m.value <= 0f) null
-            else BarSegment(p.id, p.name, p.pomodoroColor, m.value, m.focusSec, m.pomodoros)
+            if (m.value <= 0f) {
+                null
+            } else {
+                BarSegment(p.id, p.name, p.pomodoroColor, m.value, m.focusSec, m.pomodoros)
+            }
         }
         BarColumn(
             label = bucket.label,

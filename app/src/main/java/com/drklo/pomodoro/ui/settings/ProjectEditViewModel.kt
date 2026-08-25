@@ -62,7 +62,8 @@ class ProjectEditViewModel(private val repo: ProjectStore) : ViewModel() {
     fun delete(onDone: () -> Unit) {
         val current = _project.value ?: return
         if (current.id == 0L) {
-            onDone(); return
+            onDone()
+            return
         }
         launchSafely {
             repo.archive(current)

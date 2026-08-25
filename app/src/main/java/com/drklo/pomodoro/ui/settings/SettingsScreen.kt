@@ -144,10 +144,26 @@ fun SettingsScreen(
                 SettingsGroup(stringResource(R.string.section_general)) {
                     SwitchRow(stringResource(R.string.setting_sound), settings.soundEnabled, viewModel::setSound)
                     SwitchRow(stringResource(R.string.setting_vibrate), settings.vibrateEnabled, viewModel::setVibrate)
-                    SwitchRow(stringResource(R.string.setting_always_on), settings.alwaysOnDisplay, viewModel::setAlwaysOn)
-                    SwitchRow(stringResource(R.string.setting_autostart_pomodoros), settings.autostartPomodoros, viewModel::setAutostartPomodoros)
-                    SwitchRow(stringResource(R.string.setting_autostart_breaks), settings.autostartBreaks, viewModel::setAutostartBreaks)
-                    SwitchRow(stringResource(R.string.setting_hold_finished_color), settings.holdFinishedPhaseColor, viewModel::setHoldFinishedPhaseColor)
+                    SwitchRow(
+                        stringResource(R.string.setting_always_on),
+                        settings.alwaysOnDisplay,
+                        viewModel::setAlwaysOn
+                    )
+                    SwitchRow(
+                        stringResource(R.string.setting_autostart_pomodoros),
+                        settings.autostartPomodoros,
+                        viewModel::setAutostartPomodoros
+                    )
+                    SwitchRow(
+                        stringResource(R.string.setting_autostart_breaks),
+                        settings.autostartBreaks,
+                        viewModel::setAutostartBreaks
+                    )
+                    SwitchRow(
+                        stringResource(R.string.setting_hold_finished_color),
+                        settings.holdFinishedPhaseColor,
+                        viewModel::setHoldFinishedPhaseColor
+                    )
                     Caption(stringResource(R.string.setting_hold_finished_color_summary))
                     RowDivider()
                     // Resolved here rather than inside valueText: that lambda is not composable, so
@@ -168,7 +184,9 @@ fun SettingsScreen(
                         label = stringResource(R.string.setting_day_end),
                         value = settings.dayEndHour * 60 + settings.dayEndMinute,
                         onValueChange = { total -> viewModel.setDayEnd(total / 60, total % 60) },
-                        min = 0, max = 23 * 60 + 55, step = 5,
+                        min = 0,
+                        max = 23 * 60 + 55,
+                        step = 5,
                         valueText = { total -> String.format(Locale.US, "%02d:%02d", total / 60, total % 60) }
                     )
                     Caption(stringResource(R.string.setting_day_end_summary))

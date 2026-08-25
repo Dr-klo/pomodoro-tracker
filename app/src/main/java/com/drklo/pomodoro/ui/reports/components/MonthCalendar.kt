@@ -85,12 +85,18 @@ fun MonthCalendar(
     Column(modifier = modifier.fillMaxWidth()) {
         // Month navigation.
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { page += 1; selectedDate = null }) {
+            IconButton(onClick = {
+                page += 1
+                selectedDate = null
+            }) {
                 Icon(Icons.Filled.ChevronLeft, contentDescription = stringResource(R.string.cd_prev))
             }
             Text(monthLabel, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
             IconButton(
-                onClick = { page = (page - 1).coerceAtLeast(0); selectedDate = null },
+                onClick = {
+                    page = (page - 1).coerceAtLeast(0)
+                    selectedDate = null
+                },
                 enabled = page > 0
             ) {
                 Icon(Icons.Filled.ChevronRight, contentDescription = stringResource(R.string.cd_next))
@@ -214,8 +220,12 @@ private fun DayCell(
 
             drawArc(
                 color = trackColor,
-                startAngle = 0f, sweepAngle = 360f, useCenter = false,
-                topLeft = topLeft, size = arcSize, style = Stroke(width = stroke)
+                startAngle = 0f,
+                sweepAngle = 360f,
+                useCenter = false,
+                topLeft = topLeft,
+                size = arcSize,
+                style = Stroke(width = stroke)
             )
             var wedgeStart = -90f
             arcs.forEach { arc ->
@@ -226,7 +236,8 @@ private fun DayCell(
                         startAngle = wedgeStart + GAP / 2f,
                         sweepAngle = (wedge - GAP).coerceAtLeast(0f) * arc.fill,
                         useCenter = false,
-                        topLeft = topLeft, size = arcSize,
+                        topLeft = topLeft,
+                        size = arcSize,
                         style = Stroke(width = stroke)
                     )
                 }

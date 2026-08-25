@@ -130,6 +130,11 @@ ksp {
 detekt {
     buildUponDefaultConfig = true
     config.setFrom(rootProject.file("config/detekt.yml"))
+    // What is left in the baseline is debt, not noise: unnamed numbers in drawing and audio code,
+    // and a handful of long parameter lists and complex composables. Formatting was fixed rather
+    // than recorded, and the rules that were firing on data — colour palettes, test literals, enum
+    // entries — are configured in config/detekt.yml, because a rule aimed at the wrong thing is a
+    // configuration problem and only a baseline entry pretends otherwise.
     baseline = file("detekt-baseline.xml")
     // Test code is held to the same bar as production code. This used to be a `check` dependency on
     // the per-variant `detektDebugUnitTest` task, which detekt registered off the Kotlin Android

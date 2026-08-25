@@ -77,7 +77,11 @@ fun PeriodChart(
     ) {
         AggregationBar(
             aggregation = aggregation,
-            onAggregationChange = { aggregation = it; page = 0; selected = null },
+            onAggregationChange = {
+                aggregation = it
+                page = 0
+                selected = null
+            },
             paging = Paging(
                 page = page,
                 canGoBack = earliest != null && periodStart.isAfter(earliest),

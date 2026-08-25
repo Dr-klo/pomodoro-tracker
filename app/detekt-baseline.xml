@@ -1,53 +1,12 @@
 <?xml version="1.0" ?>
 <SmellBaseline>
-  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>ArgumentListWrapping:MonthCalendar.kt$( color = Color(arc.colorArgb), startAngle = wedgeStart + GAP / 2f, sweepAngle = (wedge - GAP).coerceAtLeast(0f) * arc.fill, useCenter = false, topLeft = topLeft, size = arcSize, style = Stroke(width = stroke) )</ID>
-    <ID>ArgumentListWrapping:MonthCalendar.kt$( color = trackColor, startAngle = 0f, sweepAngle = 360f, useCenter = false, topLeft = topLeft, size = arcSize, style = Stroke(width = stroke) )</ID>
-    <ID>ArgumentListWrapping:PeriodChart.kt$(logs, prevBuckets, projects)</ID>
-    <ID>ArgumentListWrapping:PeriodChart.kt$(logs, prevBuckets, projects, locale, valueOf)</ID>
-    <ID>ArgumentListWrapping:ProjectEditScreen.kt$( label = stringResource(R.string.label_daily_goal), value = p.dailyGoal, onValueChange = { v -&gt; viewModel.edit { it.copy(dailyGoal = v) } }, min = 0, max = 30 )</ID>
-    <ID>ArgumentListWrapping:ProjectEditScreen.kt$( label = stringResource(R.string.label_focus), value = p.focusMinutes, onValueChange = { v -&gt; viewModel.edit { it.copy(focusMinutes = v) } }, min = 1, max = 180, valueText = { "$it $minUnit" } )</ID>
-    <ID>ArgumentListWrapping:ProjectEditScreen.kt$( label = stringResource(R.string.label_long_break_interval), value = p.longBreakInterval, onValueChange = { v -&gt; viewModel.edit { it.copy(longBreakInterval = v) } }, min = 2, max = 12 )</ID>
-    <ID>ArgumentListWrapping:ProjectEditScreen.kt$( label = stringResource(R.string.label_long_break_minutes), value = p.longBreakMinutes, onValueChange = { v -&gt; viewModel.edit { it.copy(longBreakMinutes = v) } }, min = 1, max = 120, valueText = { "$it $minUnit" } )</ID>
-    <ID>ArgumentListWrapping:ProjectEditScreen.kt$( label = stringResource(R.string.label_pomodoros), value = p.pomodorosPerSession, onValueChange = { v -&gt; viewModel.edit { it.copy(pomodorosPerSession = v) } }, min = 1, max = 20 )</ID>
-    <ID>ArgumentListWrapping:ProjectEditScreen.kt$( label = stringResource(R.string.label_short_break), value = p.shortBreakMinutes, onValueChange = { v -&gt; viewModel.edit { it.copy(shortBreakMinutes = v) } }, min = 1, max = 120, valueText = { "$it $minUnit" } )</ID>
-    <ID>ArgumentListWrapping:ReportsScreen.kt$(R.string.stat_today)</ID>
-    <ID>ArgumentListWrapping:ReportsScreen.kt$(R.string.stat_total)</ID>
-    <ID>ArgumentListWrapping:ReportsScreen.kt$(stringResource(R.string.stat_today), formatFocus(summary.todayFocusSec, hLabel, mLabel))</ID>
-    <ID>ArgumentListWrapping:ReportsScreen.kt$(stringResource(R.string.stat_total), formatFocus(summary.totalFocusSec, hLabel, mLabel))</ID>
-    <ID>ArgumentListWrapping:ReportsScreen.kt$(summary.todayFocusSec, hLabel, mLabel)</ID>
-    <ID>ArgumentListWrapping:ReportsScreen.kt$(summary.totalFocusSec, hLabel, mLabel)</ID>
-    <ID>ArgumentListWrapping:SettingsScreen.kt$( label = stringResource(R.string.setting_day_end), value = settings.dayEndHour * 60 + settings.dayEndMinute, onValueChange = { total -&gt; viewModel.setDayEnd(total / 60, total % 60) }, min = 0, max = 23 * 60 + 55, step = 5, valueText = { total -&gt; String.format(Locale.US, "%02d:%02d", total / 60, total % 60) } )</ID>
-    <ID>ArgumentListWrapping:SettingsScreen.kt$( label = stringResource(R.string.setting_idle_alert), value = settings.idleAlertMinutes, onValueChange = viewModel::setIdleAlertMinutes, min = 0, max = 120, valueText = { v -&gt; if (v == 0) context.getString(R.string.value_off) else "$v ${context.getString(R.string.minutes_unit)}" } )</ID>
-    <ID>ArgumentListWrapping:SettingsScreen.kt$(R.string.setting_always_on)</ID>
-    <ID>ArgumentListWrapping:SettingsScreen.kt$(R.string.setting_autostart_breaks)</ID>
-    <ID>ArgumentListWrapping:SettingsScreen.kt$(R.string.setting_autostart_pomodoros)</ID>
-    <ID>ArgumentListWrapping:SettingsScreen.kt$(R.string.setting_hold_finished_color)</ID>
-    <ID>ArgumentListWrapping:SettingsScreen.kt$(stringResource(R.string.setting_always_on), settings.alwaysOnDisplay, viewModel::setAlwaysOn)</ID>
-    <ID>ArgumentListWrapping:SettingsScreen.kt$(stringResource(R.string.setting_autostart_breaks), settings.autostartBreaks, viewModel::setAutostartBreaks)</ID>
-    <ID>ArgumentListWrapping:SettingsScreen.kt$(stringResource(R.string.setting_autostart_pomodoros), settings.autostartPomodoros, viewModel::setAutostartPomodoros)</ID>
-    <ID>ArgumentListWrapping:SettingsScreen.kt$(stringResource(R.string.setting_hold_finished_color), settings.holdFinishedPhaseColor, viewModel::setHoldFinishedPhaseColor)</ID>
-    <ID>ArgumentListWrapping:SettingsViewModel.kt$SettingsViewModel$(value)</ID>
-    <ID>ArgumentListWrapping:StackedBarChart.kt$( col.label, cx, size.height - 3.dp.toPx(), if (isSelected) selectedPaint else labelPaint )</ID>
-    <ID>ArgumentListWrapping:TimerEffects.kt$TimerEffects$( endFile, freqs = doubleArrayOf(1318.5, 2637.0), weights = doubleArrayOf(1.0, 0.45), durationSec = 0.6, decay = 6.5 )</ID>
-    <ID>ArgumentListWrapping:TimerEffects.kt$TimerEffects$( startFile, freqs = doubleArrayOf(1568.0), weights = doubleArrayOf(1.0), durationSec = 0.16, decay = 22.0 )</ID>
-    <ID>ArgumentListWrapping:TimerService.kt$TimerService$(ACTION_TOGGLE)</ID>
-    <ID>ArgumentListWrapping:TimerService.kt$TimerService$(R.drawable.ic_notif_pause, getString(R.string.notif_pause), actionPendingIntent(ACTION_TOGGLE))</ID>
-    <ID>ArgumentListWrapping:TimerService.kt$TimerService$(R.drawable.ic_notif_play, getString(R.string.notif_resume), actionPendingIntent(ACTION_TOGGLE))</ID>
-    <ID>ArgumentListWrapping:TimerService.kt$TimerService$(R.string.notif_pause)</ID>
-    <ID>ArgumentListWrapping:TimerService.kt$TimerService$(R.string.notif_resume)</ID>
-    <ID>ArgumentListWrapping:WeekJournal.kt$( h.toString(), x, size.height - 4.dp.toPx(), hourPaint )</ID>
-    <ID>ArgumentListWrapping:WeekJournal.kt$( label, 4.dp.toPx(), rowTop + rowH / 2f + 4.dp.toPx(), labelPaint )</ID>
     <ID>CyclomaticComplexMethod:DonutChart.kt$@Composable fun DonutChart( values: List&lt;ProjectValue&gt;, centerLabel: String, modifier: Modifier = Modifier )</ID>
     <ID>CyclomaticComplexMethod:MainScreen.kt$@Composable fun MainScreen( onOpenSettings: () -&gt; Unit, onOpenReports: () -&gt; Unit, modifier: Modifier = Modifier, viewModel: MainViewModel = viewModel(factory = ViewModelFactories.main) )</ID>
     <ID>CyclomaticComplexMethod:MainScreen.kt$@Composable private fun ProjectPage( project: Project, /** * Live timer state, or null for a page that is merely being browsed. Passing the whole state to * every page meant all of them recomposed once a second, redrawing canvases for projects that * only ever show a static preview. */ state: TimerState?, isLandscape: Boolean, holdFinishedColor: Boolean, actions: PageActions )</ID>
     <ID>CyclomaticComplexMethod:WeekJournal.kt$@Composable fun WeekJournal( logs: List&lt;PomodoroLog&gt;, today: LocalDate, projects: List&lt;Project&gt;, modifier: Modifier = Modifier )</ID>
-    <ID>ImportOrdering:AggregationBar.kt$import androidx.compose.foundation.layout.fillMaxWidth import androidx.compose.material.icons.Icons import androidx.compose.material.icons.filled.ChevronLeft import androidx.compose.material.icons.filled.ChevronRight import androidx.compose.material3.Icon import androidx.compose.material3.IconButton import androidx.compose.material3.MaterialTheme import androidx.compose.material3.Text import androidx.compose.runtime.Composable import androidx.compose.ui.Alignment import androidx.compose.ui.Modifier import androidx.compose.ui.res.stringResource import androidx.compose.ui.text.font.FontWeight import androidx.compose.ui.text.style.TextAlign import androidx.compose.foundation.layout.Row import com.drklo.pomodoro.R import com.drklo.pomodoro.ui.common.SegmentedChoice import com.drklo.pomodoro.ui.reports.Aggregation</ID>
-    <ID>ImportOrdering:SessionBullets.kt$import androidx.compose.foundation.layout.Arrangement import androidx.compose.foundation.layout.Row import androidx.compose.foundation.layout.size import androidx.compose.foundation.shape.CircleShape import androidx.compose.foundation.background import androidx.compose.foundation.border import androidx.compose.foundation.layout.Box import androidx.compose.runtime.Composable import androidx.compose.ui.Modifier import androidx.compose.ui.draw.clip import androidx.compose.ui.graphics.Color import androidx.compose.ui.unit.dp</ID>
-    <ID>LongParameterList:AggregationBar.kt$( aggregation: Aggregation, onAggregationChange: (Aggregation) -&gt; Unit, page: Int, onPageChange: (Int) -&gt; Unit, periodLabel: String, modifier: Modifier = Modifier )</ID>
     <ID>LongParameterList:ChartTooltip.kt$( title: String?, focusSec: Int, pomodoros: Int, hint: String, modifier: Modifier = Modifier, note: String? = null, rows: List&lt;TooltipRow&gt; = emptyList() )</ID>
-    <ID>LongParameterList:MainScreen.kt$( project: Project, state: TimerState, isActive: Boolean, isLandscape: Boolean, holdFinishedColor: Boolean, onTap: () -&gt; Unit, onReset: () -&gt; Unit, onSeek: (Float) -&gt; Unit, onChangePhase: () -&gt; Unit )</ID>
     <ID>LongParameterList:PeriodChart.kt$( title: String, logs: List&lt;PomodoroLog&gt;, projects: List&lt;Project&gt;, today: LocalDate, valueOf: (PomodoroLog) -&gt; Float, summaryFormatter: (Float) -&gt; String )</ID>
     <ID>LongParameterList:Stepper.kt$( label: String, value: Int, onValueChange: (Int) -&gt; Unit, modifier: Modifier = Modifier, min: Int = 0, max: Int = 999, step: Int = 1, valueText: (Int) -&gt; String = { it.toString() } )</ID>
     <ID>LongParameterList:TimerDial.kt$( fraction: Float, color: Color, status: TimerStatus, showHand: Boolean, onTap: () -&gt; Unit, onSeek: (Float) -&gt; Unit, modifier: Modifier = Modifier )</ID>
@@ -59,29 +18,15 @@
     <ID>MagicNumber:Aggregation.kt$7</ID>
     <ID>MagicNumber:Aggregation.kt$7L</ID>
     <ID>MagicNumber:Aggregation.kt$8L</ID>
-    <ID>MagicNumber:Aggregation.kt$Aggregation.DAY$7</ID>
-    <ID>MagicNumber:Aggregation.kt$Aggregation.MONTH$6</ID>
-    <ID>MagicNumber:Aggregation.kt$Aggregation.WEEK$8</ID>
-    <ID>MagicNumber:Color.kt$0xFF43A047</ID>
-    <ID>MagicNumber:Color.kt$0xFF625B71</ID>
-    <ID>MagicNumber:Color.kt$0xFF6650A4</ID>
-    <ID>MagicNumber:Color.kt$0xFF7D5260</ID>
-    <ID>MagicNumber:Color.kt$0xFFCCC2DC</ID>
-    <ID>MagicNumber:Color.kt$0xFFD0BCFF</ID>
-    <ID>MagicNumber:Color.kt$0xFFE53935</ID>
-    <ID>MagicNumber:Color.kt$0xFFEFB8C8</ID>
     <ID>MagicNumber:ComparisonLine.kt$0.5f</ID>
-    <ID>MagicNumber:DonutChart.kt$0.25f</ID>
     <ID>MagicNumber:DonutChart.kt$100f</ID>
     <ID>MagicNumber:DonutChart.kt$360.0</ID>
     <ID>MagicNumber:DonutChart.kt$360f</ID>
     <ID>MagicNumber:DonutChart.kt$450.0</ID>
     <ID>MagicNumber:DonutChart.kt$90f</ID>
-    <ID>MagicNumber:Fanfare.kt$2_000</ID>
     <ID>MagicNumber:LogicalDay.kt$LogicalDay$23</ID>
     <ID>MagicNumber:LogicalDay.kt$LogicalDay$59</ID>
     <ID>MagicNumber:MainScreen.kt$60</ID>
-    <ID>MagicNumber:MainViewModel.kt$MainViewModel$5_000</ID>
     <ID>MagicNumber:MonthCalendar.kt$0.11f</ID>
     <ID>MagicNumber:MonthCalendar.kt$360f</ID>
     <ID>MagicNumber:MonthCalendar.kt$7</ID>
@@ -90,53 +35,13 @@
     <ID>MagicNumber:PausedBookmark.kt$3</ID>
     <ID>MagicNumber:PausedBookmark.kt$45</ID>
     <ID>MagicNumber:PeriodChart.kt$100f</ID>
-    <ID>MagicNumber:Preset.kt$Preset.CLASSIC$25</ID>
-    <ID>MagicNumber:Preset.kt$Preset.CLASSIC$5</ID>
-    <ID>MagicNumber:Preset.kt$Preset.LONG$15</ID>
-    <ID>MagicNumber:Preset.kt$Preset.LONG$45</ID>
-    <ID>MagicNumber:Preset.kt$Preset.MEDIUM$10</ID>
-    <ID>MagicNumber:Preset.kt$Preset.MEDIUM$30</ID>
     <ID>MagicNumber:Project.kt$Project$60</ID>
     <ID>MagicNumber:ProjectBars.kt$100f</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFF00897B</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFF00ACC1</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFF039BE5</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFF1E88E5</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFF37474F</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFF3949AB</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFF424242</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFF43A047</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFF455A64</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFF546E7A</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFF5D4037</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFF5E35B1</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFF607D8B</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFF6D4C41</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFF6E94A0</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFF6FA08A</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFF757575</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFF7CB342</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFF7E8AA2</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFF8DA06E</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFF8E24AA</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFF9C6E8E</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFFB07A6E</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFFB39B6E</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFFB58A8A</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFFC0CA33</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFFD81B60</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFFE53935</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFFF4511E</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFFFB8C00</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFFFDD835</ID>
-    <ID>MagicNumber:ProjectEditScreen.kt$0xFFFFB300</ID>
     <ID>MagicNumber:ReportsFormat.kt$60</ID>
-    <ID>MagicNumber:ReportsViewModel.kt$ReportsViewModel$5_000</ID>
     <ID>MagicNumber:ReportsViewModel.kt$ReportsViewModel$6</ID>
     <ID>MagicNumber:SettingsRepository.kt$SettingsRepository$23</ID>
     <ID>MagicNumber:SettingsRepository.kt$SettingsRepository$59</ID>
     <ID>MagicNumber:SettingsScreen.kt$60</ID>
-    <ID>MagicNumber:SettingsViewModel.kt$SettingsViewModel$5_000</ID>
     <ID>MagicNumber:StackedBarChart.kt$0.05f</ID>
     <ID>MagicNumber:StackedBarChart.kt$0.3f</ID>
     <ID>MagicNumber:StackedBarChart.kt$0.6f</ID>
@@ -169,52 +74,10 @@
     <ID>MagicNumber:WeekJournal.kt$6</ID>
     <ID>MagicNumber:WeekJournal.kt$60f</ID>
     <ID>MagicNumber:WeekJournal.kt$8</ID>
-    <ID>MaxLineLength:PeriodChart.kt$val prevBars = remember(logs, prevBuckets, projects) { buildStackedBars(logs, prevBuckets, projects, locale, valueOf) }</ID>
-    <ID>MaxLineLength:ReportsScreen.kt$stat(stringResource(R.string.stat_today), formatFocus(summary.todayFocusSec, hLabel, mLabel))</ID>
-    <ID>MaxLineLength:ReportsScreen.kt$stat(stringResource(R.string.stat_total), formatFocus(summary.totalFocusSec, hLabel, mLabel))</ID>
-    <ID>MaxLineLength:SettingsScreen.kt$SwitchRow(stringResource(R.string.setting_always_on), settings.alwaysOnDisplay, viewModel::setAlwaysOn)</ID>
-    <ID>MaxLineLength:SettingsScreen.kt$SwitchRow(stringResource(R.string.setting_autostart_breaks), settings.autostartBreaks, viewModel::setAutostartBreaks)</ID>
-    <ID>MaxLineLength:SettingsScreen.kt$SwitchRow(stringResource(R.string.setting_autostart_pomodoros), settings.autostartPomodoros, viewModel::setAutostartPomodoros)</ID>
-    <ID>MaxLineLength:SettingsScreen.kt$SwitchRow(stringResource(R.string.setting_hold_finished_color), settings.holdFinishedPhaseColor, viewModel::setHoldFinishedPhaseColor)</ID>
-    <ID>MaxLineLength:SettingsViewModel.kt$SettingsViewModel$fun setHoldFinishedPhaseColor(value: Boolean)</ID>
-    <ID>MaxLineLength:TimerService.kt$TimerService$builder.addAction(R.drawable.ic_notif_pause, getString(R.string.notif_pause), actionPendingIntent(ACTION_TOGGLE))</ID>
-    <ID>MaxLineLength:TimerService.kt$TimerService$builder.addAction(R.drawable.ic_notif_play, getString(R.string.notif_resume), actionPendingIntent(ACTION_TOGGLE))</ID>
-    <ID>MaximumLineLength:PeriodChart.kt$ </ID>
-    <ID>MaximumLineLength:ReportsScreen.kt$ </ID>
-    <ID>MaximumLineLength:SettingsScreen.kt$ </ID>
-    <ID>MaximumLineLength:SettingsViewModel.kt$SettingsViewModel$ </ID>
-    <ID>MaximumLineLength:TimerService.kt$TimerService$ </ID>
-    <ID>MultiLineIfElse:Aggregation.kt$BarSegment(p.id, p.name, p.pomodoroColor, m.value, m.focusSec, m.pomodoros)</ID>
-    <ID>MultiLineIfElse:Aggregation.kt$null</ID>
-    <ID>MultiLineIfElse:LogicalDay.kt$LogicalDay$now.toLocalDate()</ID>
-    <ID>MultiLineIfElse:LogicalDay.kt$LogicalDay$now.toLocalDate().minusDays(1)</ID>
-    <ID>MultiLineIfElse:MainScreen.kt$0</ID>
-    <ID>MultiLineIfElse:MainScreen.kt$1f</ID>
-    <ID>MultiLineIfElse:MainScreen.kt$state.remainingSeconds.toFloat() / state.totalSeconds</ID>
-    <ID>MultiLineIfElse:MainScreen.kt$viewModel.onPlayPause()</ID>
-    <ID>MultiLineIfElse:ProjectEditScreen.kt$Modifier</ID>
-    <ID>MultiLineIfElse:ProjectEditScreen.kt$Modifier.border(3.dp, MaterialTheme.colorScheme.onBackground, CircleShape)</ID>
-    <ID>MultiLineIfElse:SessionBullets.kt$Modifier.background(color)</ID>
-    <ID>MultiLineIfElse:SessionBullets.kt$Modifier.border(width = 1.5.dp, color = color.copy(alpha = 0.5f), shape = CircleShape)</ID>
-    <ID>MultiLineIfElse:SettingsScreen.kt$"$v ${context.getString(R.string.minutes_unit)}"</ID>
-    <ID>MultiLineIfElse:SettingsScreen.kt$context.getString(R.string.value_off)</ID>
-    <ID>MultiLineIfElse:TimerState.kt$TimerState$((totalSeconds - remainingSeconds).toFloat() / totalSeconds).coerceIn(0f, 1f)</ID>
-    <ID>MultiLineIfElse:TimerState.kt$TimerState$0f</ID>
-    <ID>MultiLineIfElse:WeekJournal.kt$TooltipRow( name = p.name, colorArgb = p.pomodoroColor, focusSec = forProject.sumOf { it.durationSeconds }, pomodoros = forProject.size )</ID>
-    <ID>MultiLineIfElse:WeekJournal.kt$null</ID>
-    <ID>NoMultipleSpaces:Color.kt$ </ID>
-    <ID>NoMultipleSpaces:ToneSynth.kt$ToneSynth$ </ID>
-    <ID>ParameterListWrapping:SettingsViewModel.kt$SettingsViewModel$(value: Boolean)</ID>
-    <ID>PropertyWrapping:PeriodChart.kt$val prevBars = remember(logs, prevBuckets, projects) { buildStackedBars(logs, prevBuckets, projects, locale, valueOf) }</ID>
     <ID>ReturnCount:DonutChart.kt$private fun sliceAt( offset: Offset, width: Float, height: Float, values: List&lt;ProjectValue&gt;, total: Float ): Int?</ID>
     <ID>ReturnCount:MainViewModel.kt$MainViewModel$fun onSelectProject(index: Int)</ID>
-    <ID>SpacingBetweenDeclarationsWithComments:TimerEvent.kt$TimerEvent.GoalReached$/** Daily goal for [projectId] was just reached — triggers the fanfare animation (F-014). */</ID>
     <ID>TooManyFunctions:SettingsRepository.kt$SettingsRepository : SettingsSource</ID>
     <ID>TooManyFunctions:SettingsViewModel.kt$SettingsViewModel : ViewModel</ID>
     <ID>TooManyFunctions:TimerEngine.kt$TimerEngine</ID>
-    <ID>Wrapping:MonthCalendar.kt$;</ID>
-    <ID>Wrapping:PeriodChart.kt$;</ID>
-    <ID>Wrapping:ProjectEditViewModel.kt$ProjectEditViewModel$;</ID>
-    <ID>Wrapping:WindowChart.kt$;</ID>
   </CurrentIssues>
 </SmellBaseline>

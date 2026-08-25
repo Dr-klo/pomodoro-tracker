@@ -115,7 +115,10 @@ fun WeekJournal(
                     strokeWidth = 1f
                 )
                 drawContext.canvas.nativeCanvas.drawText(
-                    h.toString(), x, size.height - 4.dp.toPx(), hourPaint
+                    h.toString(),
+                    x,
+                    size.height - 4.dp.toPx(),
+                    hourPaint
                 )
             }
 
@@ -127,7 +130,10 @@ fun WeekJournal(
                 val alpha = if (selectedRow == null || selectedRow == i) 1f else 0.35f
 
                 drawContext.canvas.nativeCanvas.drawText(
-                    label, 4.dp.toPx(), rowTop + rowH / 2f + 4.dp.toPx(), labelPaint
+                    label,
+                    4.dp.toPx(),
+                    rowTop + rowH / 2f + 4.dp.toPx(),
+                    labelPaint
                 )
 
                 dayLogs.forEach { log ->
@@ -157,13 +163,16 @@ fun WeekJournal(
             hint = stringResource(R.string.chart_tap_hint_day),
             rows = projects.mapNotNull { p ->
                 val forProject = dayLogs.filter { it.projectId == p.id }
-                if (forProject.isEmpty()) null
-                else TooltipRow(
-                    name = p.name,
-                    colorArgb = p.pomodoroColor,
-                    focusSec = forProject.sumOf { it.durationSeconds },
-                    pomodoros = forProject.size
-                )
+                if (forProject.isEmpty()) {
+                    null
+                } else {
+                    TooltipRow(
+                        name = p.name,
+                        colorArgb = p.pomodoroColor,
+                        focusSec = forProject.sumOf { it.durationSeconds },
+                        pomodoros = forProject.size
+                    )
+                }
             }
         )
     }

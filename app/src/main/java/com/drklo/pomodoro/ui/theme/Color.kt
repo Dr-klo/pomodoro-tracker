@@ -12,4 +12,4 @@ val Pink40 = Color(0xFF7D5260)
 
 // Default phase colors used as fallbacks when a project has none configured.
 val DefaultPomodoroColor = Color(0xFFE53935) // red — focus
-val DefaultBreakColor = Color(0xFF43A047)    // green — break / idle
+val DefaultBreakColor = Color(0xFF43A047) // green — break / idle

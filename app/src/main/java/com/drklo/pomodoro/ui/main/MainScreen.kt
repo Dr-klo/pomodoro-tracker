@@ -155,7 +155,9 @@ fun MainScreen(
     val startPage = remember(projects.size) {
         if (infinite) {
             (Int.MAX_VALUE / 2) / projects.size * projects.size + viewModel.indexOfActiveProject()
-        } else 0
+        } else {
+            0
+        }
     }
     val pagerState = rememberPagerState(initialPage = startPage) { pageCount }
 
@@ -220,8 +222,9 @@ fun MainScreen(
                 actions = PageActions(
                     // Tapping a different project while one is paused is blocked; nudge the bookmark.
                     onTap = {
-                        if (isActive) viewModel.onPlayPause()
-                        else if (pausedProject != null) shakeTrigger++
+                        if (isActive) {
+                            viewModel.onPlayPause()
+                        } else if (pausedProject != null) shakeTrigger++
                     },
                     onReset = { if (isActive) viewModel.onReset() },
                     onSeek = { if (isActive) viewModel.onSeek(it) },

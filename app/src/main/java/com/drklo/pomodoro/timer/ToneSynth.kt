@@ -47,13 +47,13 @@ object ToneSynth {
         buffer.putInt(36 + dataSize)
         buffer.put("WAVE".toByteArray(Charsets.US_ASCII))
         buffer.put("fmt ".toByteArray(Charsets.US_ASCII))
-        buffer.putInt(16)            // PCM header size
-        buffer.putShort(1)           // PCM format
-        buffer.putShort(1)           // mono
+        buffer.putInt(16) // PCM header size
+        buffer.putShort(1) // PCM format
+        buffer.putShort(1) // mono
         buffer.putInt(SAMPLE_RATE)
         buffer.putInt(byteRate)
-        buffer.putShort(2)           // block align
-        buffer.putShort(16)          // bits per sample
+        buffer.putShort(2) // block align
+        buffer.putShort(16) // bits per sample
         buffer.put("data".toByteArray(Charsets.US_ASCII))
         buffer.putInt(dataSize)
         for (s in samples) buffer.putShort(s)

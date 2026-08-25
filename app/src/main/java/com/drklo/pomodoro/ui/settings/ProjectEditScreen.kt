@@ -173,27 +173,31 @@ fun ProjectEditScreen(
                 label = stringResource(R.string.label_focus),
                 value = p.focusMinutes,
                 onValueChange = { v -> viewModel.edit { it.copy(focusMinutes = v) } },
-                min = 1, max = 180,
+                min = 1,
+                max = 180,
                 valueText = { "$it $minUnit" }
             )
             Stepper(
                 label = stringResource(R.string.label_short_break),
                 value = p.shortBreakMinutes,
                 onValueChange = { v -> viewModel.edit { it.copy(shortBreakMinutes = v) } },
-                min = 1, max = 120,
+                min = 1,
+                max = 120,
                 valueText = { "$it $minUnit" }
             )
             Stepper(
                 label = stringResource(R.string.label_pomodoros),
                 value = p.pomodorosPerSession,
                 onValueChange = { v -> viewModel.edit { it.copy(pomodorosPerSession = v) } },
-                min = 1, max = 20
+                min = 1,
+                max = 20
             )
             Stepper(
                 label = stringResource(R.string.label_daily_goal),
                 value = p.dailyGoal,
                 onValueChange = { v -> viewModel.edit { it.copy(dailyGoal = v) } },
-                min = 0, max = 30
+                min = 0,
+                max = 30
             )
 
             FieldLabel(stringResource(R.string.label_pomodoro_color))
@@ -217,14 +221,16 @@ fun ProjectEditScreen(
                     label = stringResource(R.string.label_long_break_minutes),
                     value = p.longBreakMinutes,
                     onValueChange = { v -> viewModel.edit { it.copy(longBreakMinutes = v) } },
-                    min = 1, max = 120,
+                    min = 1,
+                    max = 120,
                     valueText = { "$it $minUnit" }
                 )
                 Stepper(
                     label = stringResource(R.string.label_long_break_interval),
                     value = p.longBreakInterval,
                     onValueChange = { v -> viewModel.edit { it.copy(longBreakInterval = v) } },
-                    min = 2, max = 12
+                    min = 2,
+                    max = 12
                 )
             }
         }
@@ -257,8 +263,11 @@ private fun ColorRow(selected: Int, onPick: (Color) -> Unit) {
                     .clip(CircleShape)
                     .background(color)
                     .then(
-                        if (isSelected) Modifier.border(3.dp, MaterialTheme.colorScheme.onBackground, CircleShape)
-                        else Modifier
+                        if (isSelected) {
+                            Modifier.border(3.dp, MaterialTheme.colorScheme.onBackground, CircleShape)
+                        } else {
+                            Modifier
+                        }
                     )
                     .clickable { onPick(color) }
             )

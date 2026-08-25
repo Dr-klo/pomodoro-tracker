@@ -88,8 +88,14 @@ fun ReportsScreen(
                     0 -> {
                         SummaryRow(
                             stringResource(R.string.stat_focus_time),
-                            stat(stringResource(R.string.stat_total), formatFocus(summary.totalFocusSec, hLabel, mLabel)),
-                            stat(stringResource(R.string.stat_today), formatFocus(summary.todayFocusSec, hLabel, mLabel)),
+                            stat(
+                                stringResource(R.string.stat_total),
+                                formatFocus(summary.totalFocusSec, hLabel, mLabel)
+                            ),
+                            stat(
+                                stringResource(R.string.stat_today),
+                                formatFocus(summary.todayFocusSec, hLabel, mLabel)
+                            ),
                             stat(stringResource(R.string.stat_week), formatFocus(summary.weekFocusSec, hLabel, mLabel))
                         )
                         ChartCard(

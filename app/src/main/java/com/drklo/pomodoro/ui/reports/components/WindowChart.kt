@@ -64,7 +64,10 @@ fun WindowChart(
     ChartCard(title = title, subtitle = if (compare.isEmpty()) baseSubtitle else "$baseSubtitle\n$compare") {
         AggregationBar(
             aggregation = aggregation,
-            onAggregationChange = { aggregation = it; page = 0 },
+            onAggregationChange = {
+                aggregation = it
+                page = 0
+            },
             paging = Paging(
                 page = page,
                 canGoBack = earliest != null && window.start.isAfter(earliest),

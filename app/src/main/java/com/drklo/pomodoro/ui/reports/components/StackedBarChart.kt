@@ -112,7 +112,10 @@ fun StackedBarChart(
             }
 
             drawContext.canvas.nativeCanvas.drawText(
-                col.label, cx, size.height - 3.dp.toPx(), if (isSelected) selectedPaint else labelPaint
+                col.label,
+                cx,
+                size.height - 3.dp.toPx(),
+                if (isSelected) selectedPaint else labelPaint
             )
         }
     }

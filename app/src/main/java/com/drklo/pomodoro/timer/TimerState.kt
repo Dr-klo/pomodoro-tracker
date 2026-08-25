@@ -23,8 +23,11 @@ data class TimerState(
     val idleAlertActive: Boolean = false
 ) {
     val progress: Float
-        get() = if (totalSeconds <= 0) 0f
-        else ((totalSeconds - remainingSeconds).toFloat() / totalSeconds).coerceIn(0f, 1f)
+        get() = if (totalSeconds <= 0) {
+            0f
+        } else {
+            ((totalSeconds - remainingSeconds).toFloat() / totalSeconds).coerceIn(0f, 1f)
+        }
 
     val isRunning: Boolean get() = status == TimerStatus.RUNNING
 }

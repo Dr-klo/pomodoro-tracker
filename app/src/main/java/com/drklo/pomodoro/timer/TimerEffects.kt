@@ -62,16 +62,21 @@ class TimerEffects(context: Context) : PhaseFeedback {
                 if (!startFile.exists()) {
                     // Short higher click for start.
                     ToneSynth.writeBell(
-                        startFile, freqs = doubleArrayOf(1568.0), weights = doubleArrayOf(1.0),
-                        durationSec = 0.16, decay = 22.0
+                        startFile,
+                        freqs = doubleArrayOf(1568.0),
+                        weights = doubleArrayOf(1.0),
+                        durationSec = 0.16,
+                        decay = 22.0
                     )
                 }
                 if (!endFile.exists()) {
                     // Clear two-harmonic "ding" for the end of an interval.
                     ToneSynth.writeBell(
-                        endFile, freqs = doubleArrayOf(1318.5, 2637.0),
+                        endFile,
+                        freqs = doubleArrayOf(1318.5, 2637.0),
                         weights = doubleArrayOf(1.0, 0.45),
-                        durationSec = 0.6, decay = 6.5
+                        durationSec = 0.6,
+                        decay = 6.5
                     )
                 }
                 startSoundId = soundPool.load(startFile.absolutePath, 1)

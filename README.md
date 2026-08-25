@@ -3,6 +3,12 @@
 Native Android Pomodoro timer with per-project presets, a classic circular dial, and a full
 statistics module. Built in Kotlin + Jetpack Compose. Offline, no accounts, no monetization.
 
+**[⬇ Download the APK](https://github.com/Dr-klo/pomodoro-tracker/releases/latest)** — Android 10+, ~2.7 MB, no dependencies.
+
+> Installing takes one extra tap: the build is signed with a personal key rather than distributed
+> through Google Play, so Android will warn about an unknown source and Play Protect may ask again.
+> Each release page publishes the APK's SHA-256 if you want to check what you downloaded.
+
 See [PRD.md](PRD.md) for the full product spec.
 
 ## Screenshots

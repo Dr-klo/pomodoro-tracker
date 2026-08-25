@@ -150,15 +150,18 @@ fun SettingsScreen(
                     SwitchRow(stringResource(R.string.setting_hold_finished_color), settings.holdFinishedPhaseColor, viewModel::setHoldFinishedPhaseColor)
                     Caption(stringResource(R.string.setting_hold_finished_color_summary))
                     RowDivider()
+                    // Resolved here rather than inside valueText: that lambda is not composable, so
+                    // reading resources through the context there is invisible to recomposition and
+                    // would keep the old language after an in-app locale switch.
+                    val offLabel = stringResource(R.string.value_off)
+                    val minutesUnit = stringResource(R.string.minutes_unit)
                     Stepper(
                         label = stringResource(R.string.setting_idle_alert),
                         value = settings.idleAlertMinutes,
                         onValueChange = viewModel::setIdleAlertMinutes,
-                        min = 0, max = 120,
-                        valueText = { v ->
-                            if (v == 0) context.getString(R.string.value_off)
-                            else "$v ${context.getString(R.string.minutes_unit)}"
-                        }
+                        min = 0,
+                        max = 120,
+                        valueText = { v -> if (v == 0) offLabel else "$v $minutesUnit" }
                     )
                     Caption(stringResource(R.string.setting_idle_alert_summary))
                     Stepper(

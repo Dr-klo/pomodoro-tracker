@@ -92,7 +92,7 @@ class TimerEngine(
      * Selects the active project and resets the session. Allowed while stopped or paused
      * (carousel F-008); switching away from a paused interval discards it.
      */
-    fun setActiveProject(project: Project) = synchronized(lock) {
+    fun setActiveProject(project: Project): Unit = synchronized(lock) {
         if (_state.value.status == TimerStatus.RUNNING) return
         selectProject(project)
     }
@@ -104,7 +104,7 @@ class TimerEngine(
      * reset and swipe all stop responding. The unfinished interval is lost on purpose; it does not
      * survive a process death either.
      */
-    fun onActiveProjectArchived(replacement: Project) = synchronized(lock) {
+    fun onActiveProjectArchived(replacement: Project): Unit = synchronized(lock) {
         selectProject(replacement)
     }
 
@@ -113,7 +113,7 @@ class TimerEngine(
      * without resetting session progress. Adopts a new duration only when idle; a paused interval
      * keeps its remaining time.
      */
-    fun refreshActiveProject(updated: Project) = synchronized(lock) {
+    fun refreshActiveProject(updated: Project): Unit = synchronized(lock) {
         val s = _state.value
         if (s.project?.id != updated.id) return
         _state.value = when (s.status) {
@@ -132,7 +132,7 @@ class TimerEngine(
         }
     }
 
-    fun togglePlayPause() = synchronized(lock) {
+    fun togglePlayPause(): Unit = synchronized(lock) {
         when (_state.value.status) {
             TimerStatus.IDLE -> start(userInitiated = true)
             TimerStatus.RUNNING -> pause()
@@ -141,7 +141,7 @@ class TimerEngine(
     }
 
     /** Resets the current interval back to its full duration (F-020). Keeps session progress. */
-    fun reset() = synchronized(lock) {
+    fun reset(): Unit = synchronized(lock) {
         val s = _state.value
         val project = s.project ?: return
         supersedeTick()
@@ -165,7 +165,7 @@ class TimerEngine(
      * Only a stopped/between-phase state rolls over; a running or paused (parked) interval is left
      * untouched. A stale "awaiting next break" prompt from yesterday is cleared back to a pomodoro.
      */
-    fun refreshForNewDayIfNeeded() = synchronized(lock) {
+    fun refreshForNewDayIfNeeded(): Unit = synchronized(lock) {
         val s = _state.value
         val project = s.project ?: return
         if (s.status != TimerStatus.IDLE) return
@@ -192,7 +192,7 @@ class TimerEngine(
      * an already-running meeting). Allowed while RUNNING, PAUSED or IDLE. Clamped to at least 1s so a
      * stray drag can't auto-complete the phase. Session/today progress is untouched.
      */
-    fun seek(fraction: Float) = synchronized(lock) {
+    fun seek(fraction: Float): Unit = synchronized(lock) {
         val s = _state.value
         if (s.project == null || s.totalSeconds <= 0) return
         val target = (fraction.coerceIn(0f, 1f) * s.totalSeconds).toInt().coerceIn(1, s.totalSeconds)
@@ -203,7 +203,7 @@ class TimerEngine(
     }
 
     /** Manually changes the phase type (F-021). Allowed while IDLE or PAUSED. */
-    fun setPhase(phase: Phase) = synchronized(lock) {
+    fun setPhase(phase: Phase): Unit = synchronized(lock) {
         val s = _state.value
         if (s.status == TimerStatus.RUNNING) return
         val project = s.project ?: return

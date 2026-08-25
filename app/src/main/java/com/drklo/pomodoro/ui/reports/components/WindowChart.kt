@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import com.drklo.pomodoro.R
 import com.drklo.pomodoro.data.model.PomodoroLog
@@ -19,7 +20,6 @@ import com.drklo.pomodoro.ui.reports.sumByProject
 import com.drklo.pomodoro.ui.reports.sumInRange
 import com.drklo.pomodoro.ui.reports.windowFor
 import java.time.LocalDate
-import java.util.Locale
 
 /**
  * A snapshot chart over a single Day/Week/Month window with ‹ window › navigation. Computes the
@@ -36,7 +36,7 @@ fun WindowChart(
     subtitle: @Composable (List<ProjectValue>) -> String,
     content: @Composable (List<ProjectValue>) -> Unit
 ) {
-    val locale = Locale.getDefault()
+    val locale = LocalLocale.current.platformLocale
     var aggregation by remember { mutableStateOf(Aggregation.DAY) }
     var page by remember { mutableIntStateOf(0) }
 

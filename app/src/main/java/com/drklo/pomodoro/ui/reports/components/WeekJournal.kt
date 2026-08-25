@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
@@ -33,7 +34,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.TextStyle
-import java.util.Locale
 
 /**
  * Week journal (B1): 7 rows (today at top, going back), X axis = hours 0..24 with gridlines at
@@ -51,7 +51,7 @@ fun WeekJournal(
     val gridColor = MaterialTheme.colorScheme.outlineVariant
     val textColor = MaterialTheme.colorScheme.onSurfaceVariant
     val highlightColor = MaterialTheme.colorScheme.surfaceVariant
-    val locale = Locale.getDefault()
+    val locale = LocalLocale.current.platformLocale
     val projectColors = remember(projects) { projects.associate { it.id to it.pomodoroColor } }
 
     // Build 7 rows: index 0 = today, then previous days. Each row keeps its day label and logs.

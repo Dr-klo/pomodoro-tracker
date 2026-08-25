@@ -23,7 +23,7 @@ class BucketsTest {
      * Locale("ru") carries no calendar convention and the JVM falls back to a Sunday week — the very
      * trap this rule exists to avoid.
      */
-    private val russianRegion = Locale("ru", "RU")
+    private val russianRegion = Locale.Builder().setLanguage("ru").setRegion("RU").build()
 
     @Test
     fun `day window ends today and covers a full week`() {

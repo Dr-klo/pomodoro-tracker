@@ -39,8 +39,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -181,8 +181,10 @@ fun MainScreen(
             .collect { page -> viewModel.onSelectProject(page % projects.size) }
     }
 
-    val isLandscape =
-        LocalConfiguration.current.screenWidthDp > LocalConfiguration.current.screenHeightDp
+    // Container size rather than Configuration.screenWidthDp: the configuration values are not
+    // observable state, so a rotation would not necessarily recompose what depends on them.
+    val containerSize = LocalWindowInfo.current.containerSize
+    val isLandscape = containerSize.width > containerSize.height
 
     // Paused session "parked" on its project; shown as a bookmark while browsing other projects.
     val pausedProject = if (state.status == TimerStatus.PAUSED) state.project else null

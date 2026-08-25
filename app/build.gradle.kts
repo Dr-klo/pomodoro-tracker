@@ -1,10 +1,11 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.io.File
 import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
+    // No kotlin.android plugin: AGP 9 provides Kotlin support itself and rejects it.
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.detekt)
@@ -24,12 +25,12 @@ val keystoreProps = Properties().apply {
 
 android {
     namespace = "com.drklo.pomodoro"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.drklo.pomodoro"
         minSdk = 29
-        targetSdk = 35
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 
@@ -39,7 +40,7 @@ android {
     // The exported schemas are the reference migrations are checked against, so they are versioned.
     sourceSets {
         // MigrationTestHelper reads them from the test APK's assets.
-        getByName("androidTest").assets.srcDir("$projectDir/schemas")
+        getByName("androidTest").assets.directories.add("$projectDir/schemas")
     }
 
     testOptions {
@@ -85,11 +86,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-        // Warnings must not accumulate: every one of them is either fixed or explicitly suppressed.
-        allWarningsAsErrors = true
-    }
     buildFeatures {
         compose = true
     }
@@ -115,6 +111,16 @@ android {
     }
 }
 
+// Kotlin 2.3 removed the `kotlinOptions` block inside `android`; this is the same settings in the
+// compilerOptions DSL that replaced it.
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_17
+        // Warnings must not accumulate: every one of them is either fixed or explicitly suppressed.
+        allWarningsAsErrors = true
+    }
+}
+
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
@@ -125,10 +131,14 @@ detekt {
     buildUponDefaultConfig = true
     config.setFrom(rootProject.file("config/detekt.yml"))
     baseline = file("detekt-baseline.xml")
+    // Test code is held to the same bar as production code. This used to be a `check` dependency on
+    // the per-variant `detektDebugUnitTest` task, which detekt registered off the Kotlin Android
+    // plugin — the plugin AGP 9 no longer wants. Naming the source sets keeps the policy in force
+    // and, unlike the old arrangement, states it where someone will read it.
+    source.setFrom(
+        files("src/main/java", "src/test/java", "src/androidTest/java")
+    )
 }
-
-// The plain `detekt` task looks at production code only; test code is held to the same bar.
-tasks.named("check") { dependsOn("detektDebugUnitTest") }
 
 dependencies {
     detektPlugins(libs.detekt.formatting)

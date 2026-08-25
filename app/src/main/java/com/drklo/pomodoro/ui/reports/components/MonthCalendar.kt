@@ -31,6 +31,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -47,7 +48,6 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
-import java.util.Locale
 
 /**
  * Month calendar (B2) where each date is wrapped in a mini donut ring showing how much of that
@@ -60,7 +60,7 @@ fun MonthCalendar(
     today: LocalDate,
     modifier: Modifier = Modifier
 ) {
-    val locale = Locale.getDefault()
+    val locale = LocalLocale.current.platformLocale
     var page by remember { mutableIntStateOf(0) }
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
     val month = remember(today, page) { YearMonth.from(today).minusMonths(page.toLong()) }

@@ -37,6 +37,6 @@ class LocaleHelperTest {
     fun `a language tag on its own does not carry a calendar`() {
         // Why the region is threaded through at all: the JVM answers "Sunday" for a bare "ru",
         // so building the locale from the language alone would hand Russian users an American week.
-        assertEquals(DayOfWeek.SUNDAY, firstDayOfWeek(Locale("ru")))
+        assertEquals(DayOfWeek.SUNDAY, firstDayOfWeek(Locale.forLanguageTag("ru")))
     }
 }

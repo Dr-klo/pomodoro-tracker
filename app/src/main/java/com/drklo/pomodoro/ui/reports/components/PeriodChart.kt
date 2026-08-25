@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import com.drklo.pomodoro.R
 import com.drklo.pomodoro.data.model.PomodoroLog
@@ -18,7 +19,6 @@ import com.drklo.pomodoro.ui.reports.elapsedDaysIn
 import com.drklo.pomodoro.ui.reports.periodLabel
 import com.drklo.pomodoro.ui.reports.sumInRange
 import java.time.LocalDate
-import java.util.Locale
 import kotlin.math.roundToInt
 
 /**
@@ -34,7 +34,7 @@ fun PeriodChart(
     valueOf: (PomodoroLog) -> Float,
     summaryFormatter: (Float) -> String
 ) {
-    val locale = Locale.getDefault()
+    val locale = LocalLocale.current.platformLocale
     var aggregation by remember { mutableStateOf(Aggregation.DAY) }
     var page by remember { mutableIntStateOf(0) }
     var selected by remember { mutableStateOf<Int?>(null) }

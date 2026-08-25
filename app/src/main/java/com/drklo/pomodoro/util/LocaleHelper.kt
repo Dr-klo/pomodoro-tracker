@@ -29,9 +29,15 @@ object LocaleHelper {
     fun localeFor(languageTag: String): Locale =
         localeFor(languageTag, Resources.getSystem().configuration.locales[0].country)
 
-    /** The pure half of [localeFor], so the rule itself can be tested without a device. */
+    /**
+     * The pure half of [localeFor], so the rule itself can be tested without a device.
+     *
+     * Built through [Locale.Builder] rather than the `Locale(language, country)` constructor, which
+     * Java deprecated. `Locale.of` would be the direct replacement but it arrived in Java 19, well
+     * above this app's `minSdk`.
+     */
     fun localeFor(languageTag: String, systemRegion: String): Locale =
-        Locale(languageTag, systemRegion)
+        Locale.Builder().setLanguage(languageTag).setRegion(systemRegion).build()
 
     /** A context that resolves resources in [languageTag]. Pure: nothing outside it changes. */
     fun wrap(context: Context, languageTag: String): Context {

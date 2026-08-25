@@ -1,5 +1,8 @@
 # Pomodoro Tracker
 
+[![CI](https://github.com/Dr-klo/pomodoro-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/Dr-klo/pomodoro-tracker/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 Native Android Pomodoro timer with per-project presets, a classic circular dial, and a full
 statistics module. Built in Kotlin + Jetpack Compose. Offline, no accounts, no monetization.
 

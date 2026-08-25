@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+# A second push supersedes a run still in flight; nothing is learned from finishing the older one.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Build, test, lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # The project compiles against Java 17 (sourceCompatibility / jvmTarget).
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # Handles the Gradle distribution and the dependency/build cache.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # The same gates the project enforces locally: Kotlin warnings are errors, Android Lint
+      # warnings are errors, and detekt runs over test sources as well as production ones.
+      # No release build here — signing needs a keystore that deliberately lives outside the repo.
+      - name: Build, test and lint
+        run: >
+          ./gradlew --no-daemon
+          :app:assembleDebug
+          :app:testDebugUnitTest
+          :app:detekt
+          :app:detektDebugUnitTest
+          :app:lintDebug
+
+      # A red run is only useful if you can see which check failed and why.
+      - name: Upload reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: |
+            app/build/reports/
+            app/build/test-results/
+          retention-days: 14

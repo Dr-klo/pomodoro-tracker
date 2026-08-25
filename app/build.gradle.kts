@@ -103,6 +103,12 @@ android {
             // Dependency freshness is a deliberate, separate chore — not a per-build gate.
             "GradleDependency",
             "AndroidGradlePluginVersion",
+            // Same chore, and additionally not reproducible: OldTargetApi compares targetSdk
+            // against whatever platforms the machine happens to have installed, so one commit
+            // passes here and fails on a CI runner with a newer SDK. A gate that depends on the
+            // machine rather than the code cannot gate anything. Raising targetSdk is a real task
+            // with real device testing behind it, not something to be forced by a lint run.
+            "OldTargetApi",
             // The app ships as a plain APK, never as an AAB, so language splits cannot happen.
             "AppBundleLocaleChanges"
         )

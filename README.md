@@ -162,7 +162,7 @@ The three P1s are a fair sample of what the protocol catches:
 |---|---|
 | `F-R1-01` | The day counter did not cross the logical-day boundary, so after midnight the daily goal could never fire again |
 | `F-R5-01` | Deleting the active project left the timer pointing at something gone: no carousel page matched it, and play, reset and swipe all stopped responding |
-| `F-R0-01` | The dial — tap to pause, hold to reset, drag to seek — is invisible to screen readers. Still open; see Limitations |
+| `F-R0-01` | The dial — tap to pause, drag to seek — was invisible to screen readers: raw pointer input over a Canvas announces no name, role or state. Fixed; the label written for it during the review had been sitting unattached ever since |
 
 **Decisions were recorded, including the refusals.** Four findings are `wontfix` and two `deferred`,
 each with its reasoning beside it. One product decision — that a deleted project's history must stay
@@ -197,8 +197,10 @@ deadline rather than accumulated, so it does not drift.
 
 Stated plainly, because a reader will find them anyway:
 
-- **No accessibility layer.** There are no `semantics` modifiers, so the dial is unreachable by
-  TalkBack. Known, filed as a P1, deliberately deferred rather than overlooked (`F-R0-01`).
+- **Accessibility is started, not finished.** The main screen is covered — the dial announces its
+  phase, state and remaining time and can be activated by a screen reader (`F-R0-01`, closed) — but
+  Reports and Settings have had no equivalent pass, and the charts are Canvas drawings with nothing
+  behind them for a screen reader to read.
 - **No UI tests.** 76 unit tests cover the timer engine, aggregation, formatting and locale rules,
   and two instrumented tests cover Room migration and project archiving — but every Compose screen
   is verified by hand only.
@@ -207,7 +209,7 @@ Stated plainly, because a reader will find them anyway:
   Android versions.
 - **Sideload only.** Signed with a personal key rather than distributed through Google Play, and the
   foreground service uses the `specialUse` type, which a store submission would have to argue for.
-- **77 accepted findings in the detekt baseline**, mostly unnamed constants in chart geometry and
+- **72 accepted findings in the detekt baseline**, mostly unnamed constants in chart geometry and
   audio synthesis. Formatting is fixed rather than recorded; what is left is real, if minor, debt.
 - **Statistics start at install.** Detailed history accrues from pomodoros completed afterwards;
   earlier daily counts are not backfilled into the timeline.

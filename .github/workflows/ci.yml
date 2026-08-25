@@ -42,13 +42,12 @@ jobs:
         if: ${{ !cancelled() }}
         run: ./gradlew --no-daemon :app:testDebugUnitTest
 
-      - name: detekt (production)
+      # One task covers production and test sources: the per-variant detekt tasks disappeared with
+      # the kotlin-android plugin in the AGP 9 upgrade, so the source sets are named in the detekt
+      # block instead.
+      - name: detekt
         if: ${{ !cancelled() }}
         run: ./gradlew --no-daemon :app:detekt
-
-      - name: detekt (test sources)
-        if: ${{ !cancelled() }}
-        run: ./gradlew --no-daemon :app:detektDebugUnitTest
 
       # Kotlin warnings are errors and Android Lint warnings are errors; the accepted leftovers
       # live in lint-baseline.xml. No release build here — signing needs a keystore that

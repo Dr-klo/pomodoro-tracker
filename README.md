@@ -5,6 +5,20 @@ statistics module. Built in Kotlin + Jetpack Compose. Offline, no accounts, no m
 
 See [PRD.md](PRD.md) for the full product spec.
 
+## Screenshots
+
+| Running | Paused | Landscape |
+|---|---|---|
+| <img src="docs/screenshots/01-main-running.png" width="230"> | <img src="docs/screenshots/02-main-paused.png" width="230"> | <img src="docs/screenshots/03-main-landscape.png" width="230"> |
+
+| Focus time & week journal | Month goals & trend | Per-project breakdown |
+|---|---|---|
+| <img src="docs/screenshots/04-reports-tomatoes.png" width="230"> | <img src="docs/screenshots/05-reports-calendar.png" width="230"> | <img src="docs/screenshots/06-reports-projects.png" width="230"> |
+
+| Settings & presets | Russian locale |
+|---|---|
+| <img src="docs/screenshots/07-settings.png" width="230"> | <img src="docs/screenshots/08-localization-ru.png" width="230"> |
+
 ## Features
 
 - **Circular dial** that empties as the countdown runs, with a clock hand and tap-to-pause /
@@ -74,34 +88,38 @@ counter and a detailed log row used by the reports.
 
 ## Build & run
 
-Android Studio is the simplest path (Open project → first Gradle sync downloads Gradle and
-generates the wrapper jar if missing → Run the `app` config). The command line works too — no
-separate JDK/SDK install needed, reuse the ones Android Studio bundles.
+Requires Android 10+ (`minSdk 29`), portrait and landscape. Developed and manually verified on a
+Samsung Galaxy A50 / A51 running One UI.
 
-Target device: Samsung Galaxy A50/A51 (Android 10+).
+Android Studio is the simplest path: open the project, let the first Gradle sync run, and launch
+the `app` configuration. From the command line (use `gradlew.bat` on Windows):
 
-### Build, commit & deploy from the command line (Windows / PowerShell)
-
-Android Studio's JBR is the JDK; the SDK ships `adb`. On this machine:
-
-```powershell
-$env:JAVA_HOME = "$env:LOCALAPPDATA\Programs\Android Studio\jbr"
-$adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
-
-# Build the debug APK (SDK path comes from local.properties, not in git)
-.\gradlew.bat :app:assembleDebug
-# -> app\build\outputs\apk\debug\app-debug.apk
-
-# Checks: unit tests, Android Lint, detekt (production + test sources)
-.\gradlew.bat :app:testDebugUnitTest :app:lintDebug :app:detekt :app:detektDebugUnitTest
-
-# Deploy to the connected device (check it's there first)
-& $adb devices
-& $adb install -r app\build\outputs\apk\debug\app-debug.apk
-
-# Commit (multi-line message via a file — PowerShell splits `-m` here-strings)
-git commit -F path\to\message.txt
+```bash
+./gradlew :app:assembleDebug     # -> app/build/outputs/apk/debug/app-debug.apk
+./gradlew :app:check             # unit tests, Android Lint, detekt (production + test sources)
+adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
+
+The Android SDK location comes from `local.properties`, which is not in version control; Android
+Studio writes it on first sync.
+
+### Release builds
+
+Signing is configured only when a `keystore.properties` is found — first in `~/.pomodoro/`, then in
+the project root. The keystore and its passwords deliberately live **outside** the repository: a
+signing key leaked into a public history has no revocation path, and `.gitignore` alone is a single
+layer of defence.
+
+```properties
+# ~/.pomodoro/keystore.properties  — forward slashes: '\' escapes in .properties files
+storeFile=/absolute/path/to/release.jks
+storePassword=…
+keyAlias=…
+keyPassword=…
+```
+
+Without that file the app still builds; the release variant simply comes out unsigned.
+`./gradlew :app:assembleRelease` produces a ~2.7 MB APK (R8 and resource shrinking are on).
 
 ### Samsung background note
 

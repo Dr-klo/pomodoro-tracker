@@ -1,3 +1,4 @@
+import java.io.File
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -9,10 +10,16 @@ plugins {
     alias(libs.plugins.detekt)
 }
 
-// Release signing config is read from keystore.properties (kept out of version control).
-val keystorePropsFile = rootProject.file("keystore.properties")
+// Release signing. The keystore and its passwords live *outside* the repository: a signing key
+// leaked into a public history has no revocation path, and .gitignore is only one layer of defence.
+// Looked up in ~/.pomodoro; the old in-project location still works for a checkout not yet migrated.
+val keystorePropsFile = sequenceOf(
+    File(System.getProperty("user.home"), ".pomodoro/keystore.properties"),
+    rootProject.file("keystore.properties")
+).firstOrNull { it.exists() }
+
 val keystoreProps = Properties().apply {
-    if (keystorePropsFile.exists()) load(FileInputStream(keystorePropsFile))
+    keystorePropsFile?.let { file -> FileInputStream(file).use { load(it) } }
 }
 
 android {
@@ -41,9 +48,13 @@ android {
     }
 
     signingConfigs {
-        if (keystorePropsFile.exists()) {
+        if (keystorePropsFile != null) {
             create("release") {
-                storeFile = rootProject.file(keystoreProps.getProperty("storeFile"))
+                // Absolute path since the move out of the repo; a relative one still resolves
+                // against the properties file that named it.
+                storeFile = File(keystoreProps.getProperty("storeFile")).let { named ->
+                    if (named.isAbsolute) named else File(keystorePropsFile.parentFile, named.path)
+                }
                 storePassword = keystoreProps.getProperty("storePassword")
                 keyAlias = keystoreProps.getProperty("keyAlias")
                 keyPassword = keystoreProps.getProperty("keyPassword")

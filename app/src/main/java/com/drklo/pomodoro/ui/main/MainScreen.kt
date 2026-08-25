@@ -90,8 +90,12 @@ fun MainScreen(
     // so yesterday's progress doesn't linger when the process survives past the day-end boundary.
     LifecycleEventEffect(Lifecycle.Event.ON_START) { viewModel.onAppForegrounded() }
 
-    // Always-on display (F-011): keep the screen awake while the timer is active or awaiting.
-    val keepOn = settings.alwaysOnDisplay && (state.status != TimerStatus.IDLE || state.awaitingNext)
+    // Always-on display (F-011): while the setting is on, the main screen does not sleep at all —
+    // plain IDLE before the first start included. F-011 originally scoped this to "an active
+    // timer", which left exactly one gap: sitting in front of the dial about to start, the screen
+    // locks and the app looks broken. It is also a precondition for F-012 — the idle alert is a
+    // colour change on an already-lit screen, so a screen that sleeps makes it unobservable.
+    val keepOn = settings.alwaysOnDisplay
     val view = LocalView.current
     // Cleared on the way out too: leaving for Reports used to leave the flag stuck on the View,
     // so the screen kept burning even after the timer had stopped.

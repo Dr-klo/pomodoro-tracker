@@ -123,5 +123,10 @@ PRD, только после завершённой фазы и на паузе.
 не тронуты.
 
 **Проверки:** `assembleDebug`, 76 unit-тестов, detekt и lint — зелёные (с `allWarningsAsErrors`).
-**Глазами не проверено** — нужно на устройстве убедиться, что в IDLE экран действительно не
-блокируется.
+
+**Проверено на устройстве 25.08.2026** (SM-A505FN, Galaxy A50, One UI). Флаг `KEEP_SCREEN_ON` через
+`dumpsys window` на One UI напрямую не виден, поэтому проверялось поведением: системный таймаут
+экрана `screen_off_timeout=30000`, приложение оставлено в IDLE на 50 с без касаний. После ожидания
+`Display Power: state=ON`, `isKeyguardShowing=false`, `mDreamingLockscreen=false`, `MainActivity`
+по-прежнему resumed — экран не погас и не заблокировался. До фикса он гас на 30-й секунде.
+Побочно подтвердилось, что настройка always-on в DataStore включена: иначе `keepOn` был бы `false`.

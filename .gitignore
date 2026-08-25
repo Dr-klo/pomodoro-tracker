@@ -51,9 +51,13 @@ google-services.json
 # Mac OS
 .DS_Store
 
-# Claude Code: the agent config itself is kept (it is part of how this project was built),
-# but the local settings hold machine paths and a git identity — those stay out.
+# Claude Code: local settings carry machine paths and a git identity, so they stay out. Anything
+# else placed under .claude/ (shared agent config) is tracked as usual.
 .claude/settings.local.json
+
+# Publication review notes — a working document about this repository's own weak spots.
+# Kept locally on purpose; it is not something to hand to a reader of the repository.
+Github_review.md
 
 # Misc
 *.hprof

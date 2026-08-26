@@ -55,9 +55,9 @@ import com.drklo.pomodoro.ui.ViewModelFactories
 import com.drklo.pomodoro.ui.common.ConfirmDeleteProjectDialog
 import com.drklo.pomodoro.ui.common.SegmentedChoice
 import com.drklo.pomodoro.ui.common.Stepper
+import com.drklo.pomodoro.ui.common.TimeOfDayField
 import com.drklo.pomodoro.util.BatteryOptimization
 import com.drklo.pomodoro.util.findActivity
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -177,17 +177,17 @@ fun SettingsScreen(
                         onValueChange = viewModel::setIdleAlertMinutes,
                         min = 0,
                         max = 120,
+                        sliderStep = 5,
                         valueText = { v -> if (v == 0) offLabel else "$v $minutesUnit" }
                     )
                     Caption(stringResource(R.string.setting_idle_alert_summary))
-                    Stepper(
+                    // A clock reading, not a duration: 287 stepper positions replaced by the
+                    // platform picker, which also settles 12- versus 24-hour on its own.
+                    TimeOfDayField(
                         label = stringResource(R.string.setting_day_end),
-                        value = settings.dayEndHour * 60 + settings.dayEndMinute,
-                        onValueChange = { total -> viewModel.setDayEnd(total / 60, total % 60) },
-                        min = 0,
-                        max = 23 * 60 + 55,
-                        step = 5,
-                        valueText = { total -> String.format(Locale.US, "%02d:%02d", total / 60, total % 60) }
+                        hour = settings.dayEndHour,
+                        minute = settings.dayEndMinute,
+                        onTimeChange = viewModel::setDayEnd
                     )
                     Caption(stringResource(R.string.setting_day_end_summary))
                 }

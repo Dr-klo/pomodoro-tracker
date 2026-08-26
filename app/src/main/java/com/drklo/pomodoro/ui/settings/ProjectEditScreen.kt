@@ -175,6 +175,7 @@ fun ProjectEditScreen(
                 onValueChange = { v -> viewModel.edit { it.copy(focusMinutes = v) } },
                 min = 1,
                 max = 180,
+                sliderStep = 5,
                 valueText = { "$it $minUnit" }
             )
             Stepper(
@@ -183,6 +184,7 @@ fun ProjectEditScreen(
                 onValueChange = { v -> viewModel.edit { it.copy(shortBreakMinutes = v) } },
                 min = 1,
                 max = 120,
+                sliderStep = 5,
                 valueText = { "$it $minUnit" }
             )
             Stepper(
@@ -223,6 +225,7 @@ fun ProjectEditScreen(
                     onValueChange = { v -> viewModel.edit { it.copy(longBreakMinutes = v) } },
                     min = 1,
                     max = 120,
+                    sliderStep = 5,
                     valueText = { "$it $minUnit" }
                 )
                 Stepper(

@@ -35,8 +35,11 @@ jobs:
       # Each gate is its own step. A single combined command reports one "exit code 1" and hides
       # which check failed; separate steps name the culprit in the job summary. They keep running
       # after a failure on purpose — one red run should report every broken gate, not just the first.
+      # assembleDebugAndroidTest compiles the instrumented tests without needing an emulator.
+      # Without it they rot unnoticed: a repository refactor changed a signature and the
+      # instrumented tests stopped compiling for two commits while every gate stayed green.
       - name: Build
-        run: ./gradlew --no-daemon :app:assembleDebug
+        run: ./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest
 
       - name: Unit tests
         if: ${{ !cancelled() }}

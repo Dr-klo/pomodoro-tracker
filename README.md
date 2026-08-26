@@ -106,11 +106,20 @@ the `app` configuration. From the command line (use `gradlew.bat` on Windows):
 ```bash
 ./gradlew :app:assembleDebug     # -> app/build/outputs/apk/debug/app-debug.apk
 ./gradlew :app:check             # unit tests, Android Lint, detekt (production + test sources)
+./gradlew :app:connectedAndroidTest   # Room migration + repository, needs a device or emulator
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
 The Android SDK location comes from `local.properties`, which is not in version control; Android
 Studio writes it on first sync.
+
+> `connectedAndroidTest` uninstalls the app before it runs, and Android deletes the database with
+> it. Point it at an emulator, or back up first — this has cost real data twice.
+
+The Compose tests are deliberately *not* instrumented: they assert the semantics tree, which
+Compose builds without a renderer, so Robolectric runs them on the JVM in seconds and CI needs no
+emulator. The instrumented set is reserved for what genuinely needs Android — SQLite migrations and
+the repository against a real database.
 
 ### Release builds
 
@@ -201,9 +210,11 @@ Stated plainly, because a reader will find them anyway:
   phase, state and remaining time and can be activated by a screen reader (`F-R0-01`, closed) — but
   Reports and Settings have had no equivalent pass, and the charts are Canvas drawings with nothing
   behind them for a screen reader to read.
-- **No UI tests.** 76 unit tests cover the timer engine, aggregation, formatting and locale rules,
-  and two instrumented tests cover Room migration and project archiving — but every Compose screen
-  is verified by hand only.
+- **UI tests cover components, not screens.** 86 tests run on the JVM: the timer engine,
+  aggregation, formatting and locale rules, plus ten Compose tests that pin the semantics of the
+  dial, the stepper and the segmented choice under Robolectric. Two instrumented tests cover Room
+  migration and project archiving on a real device. No test drives a whole screen or a user journey
+  end to end; those are verified by hand.
 - **One device family.** Developed and checked on a Samsung Galaxy A5x running Android 11.
   `targetSdk` is current, but the runtime behaviour changes that come with it are untested on newer
   Android versions.

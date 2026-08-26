@@ -44,8 +44,14 @@ android {
     }
 
     testOptions {
-        // Unit tests touch pure logic only; stubbed android.* calls return defaults instead of throwing.
+        // Most unit tests touch pure logic; stubbed android.* calls return defaults instead of
+        // throwing. Robolectric substitutes real implementations for the tests that ask for it, so
+        // this only governs the rest.
         unitTests.isReturnDefaultValues = true
+        // Robolectric needs the merged manifest and the compiled resources: the composables under
+        // test resolve strings and theme attributes, and createComposeRule() launches the empty
+        // activity that ui-test-manifest contributes to the debug manifest.
+        unitTests.isIncludeAndroidResources = true
     }
 
     signingConfigs {
@@ -146,6 +152,18 @@ detekt {
 }
 
 dependencies {
+    // The app never serialises anything itself, but Room 2.8's migration tooling does, and it needs
+    // kotlinx-serialization 1.8.1 or newer. Something on the app's own classpath pins 1.7.3, and
+    // Gradle's consistent resolution then forces that same 1.7.3 onto the androidTest classpath —
+    // where MigrationTestHelper reads the exported schemas and dies with an AbstractMethodError on
+    // a method whose signature changed between the two. A constraint fixes the version without
+    // adding a library the production code does not use.
+    constraints {
+        implementation(libs.kotlinx.serialization.json) {
+            because("Room 2.8 migration tooling requires >= 1.8.1; see MigrationTest")
+        }
+    }
+
     detektPlugins(libs.detekt.formatting)
 
     implementation(libs.androidx.core.ktx)
@@ -171,9 +189,20 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     debugImplementation(libs.androidx.ui.tooling)
+    // Hosts the empty activity that createComposeRule() launches; debug-only by design.
+    debugImplementation(libs.androidx.ui.test.manifest)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+    // The Compose tests run on the JVM under Robolectric rather than on a device. What they assert
+    // is the semantics tree — roles, state descriptions, click actions — which is produced by
+    // Compose itself and does not depend on a real renderer, so a device buys nothing and costs an
+    // emulator in CI. The instrumented set below stays for what genuinely needs Android: SQLite
+    // migrations and the repository against a real database.
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.ui.test.junit4)
+    testImplementation(libs.androidx.test.ext.junit)
+    testImplementation(libs.robolectric)
 
     androidTestImplementation(libs.junit)
     androidTestImplementation(libs.androidx.room.testing)

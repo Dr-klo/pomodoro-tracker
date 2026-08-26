@@ -86,15 +86,17 @@ class ProjectArchiveTest {
 
     @Test
     fun archivingIsNotSeededOver() = runBlocking {
-        repo.ensureSeeded()
+        repo.ensureSeeded(alreadySeeded = false)
         val seeded = repo.projects.first()
         assertEquals(3, seeded.size)
 
         repo.archive(seeded.first())
         assertEquals(2, repo.projects.first().size)
 
-        // Seeding must not treat an archived project as a missing one and refill the list.
-        repo.ensureSeeded()
+        // Seeding must not treat an archived project as a missing one and refill the list. Passing
+        // false deliberately: the "already seeded" flag would short-circuit before the check this
+        // test is about, which is that an archived row still counts as an existing one.
+        repo.ensureSeeded(alreadySeeded = false)
         assertEquals(2, repo.projects.first().size)
         assertEquals(3, repo.allProjects.first().size)
     }

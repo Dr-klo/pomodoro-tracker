@@ -1,6 +1,12 @@
 package com.drklo.pomodoro.ui.common
 
 import android.text.format.DateFormat
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
@@ -15,6 +21,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import com.drklo.pomodoro.R
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -63,8 +71,26 @@ fun TimeOfDayField(
         )
         AlertDialog(
             onDismissRequest = { picking = false },
-            title = { Text(label) },
-            text = { TimePicker(state = state) },
+            // The dialog decides its own width instead of taking the platform default. That default
+            // is a fraction of the screen's *shorter* side, so in landscape it came out around
+            // 320dp — and Material lays the picker out side by side there, needing roughly 560dp.
+            // The dial ran off the right edge of the dialog, taking half the minutes field with it.
+            // Given the room, the horizontal layout is the one that belongs in landscape.
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+            modifier = Modifier.widthIn(max = DIALOG_MAX_WIDTH).padding(horizontal = 24.dp),
+            // No title: the row that opened this already says what is being set, and in a landscape
+            // window the height it would take is the difference between the dial fitting and not.
+            text = {
+                // A scroll as the last resort. Nothing should reach it on a phone, but a clipped
+                // clock with no way to see the rest of it is the one outcome worth ruling out.
+                Box(
+                    modifier = Modifier
+                        .verticalScroll(rememberScrollState())
+                        .horizontalScroll(rememberScrollState())
+                ) {
+                    TimePicker(state = state)
+                }
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -93,3 +119,6 @@ internal fun formatTimeOfDay(hour: Int, minute: Int, is24Hour: Boolean, locale: 
         LocalTime.of(hour, minute)
             .format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale))
     }
+
+/** Wide enough for Material's side-by-side layout; beyond that the dialog would just be empty. */
+private val DIALOG_MAX_WIDTH = 640.dp

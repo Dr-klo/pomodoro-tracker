@@ -3,6 +3,7 @@ package com.drklo.pomodoro.data
 import android.content.Context
 import androidx.room.Room
 import com.drklo.pomodoro.data.db.AppDatabase
+import com.drklo.pomodoro.data.repository.BackupRepository
 import com.drklo.pomodoro.data.repository.ProjectRepository
 import com.drklo.pomodoro.data.repository.SettingsRepository
 import com.drklo.pomodoro.data.repository.StatsRepository
@@ -24,6 +25,7 @@ class AppContainer(context: Context) {
 
     val projectRepository: ProjectRepository by lazy { ProjectRepository(database) }
     val statsRepository: StatsRepository by lazy { StatsRepository(database) }
+    val backupRepository: BackupRepository by lazy { BackupRepository(database) }
     val settingsRepository: SettingsRepository by lazy { SettingsRepository(context.applicationContext) }
 
     private val timerEffects: TimerEffects by lazy { TimerEffects(context.applicationContext) }

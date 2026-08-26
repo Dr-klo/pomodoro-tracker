@@ -47,6 +47,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.drklo.pomodoro.R
 import com.drklo.pomodoro.data.model.Preset
+import com.drklo.pomodoro.data.model.ProjectLimits
 import com.drklo.pomodoro.ui.ViewModelFactories
 import com.drklo.pomodoro.ui.common.ConfirmDeleteProjectDialog
 import com.drklo.pomodoro.ui.common.Stepper
@@ -173,8 +174,8 @@ fun ProjectEditScreen(
                 label = stringResource(R.string.label_focus),
                 value = p.focusMinutes,
                 onValueChange = { v -> viewModel.edit { it.copy(focusMinutes = v) } },
-                min = 1,
-                max = 180,
+                min = ProjectLimits.focusMinutes.first,
+                max = ProjectLimits.focusMinutes.last,
                 sliderStep = 5,
                 valueText = { "$it $minUnit" }
             )
@@ -182,8 +183,8 @@ fun ProjectEditScreen(
                 label = stringResource(R.string.label_short_break),
                 value = p.shortBreakMinutes,
                 onValueChange = { v -> viewModel.edit { it.copy(shortBreakMinutes = v) } },
-                min = 1,
-                max = 120,
+                min = ProjectLimits.shortBreakMinutes.first,
+                max = ProjectLimits.shortBreakMinutes.last,
                 sliderStep = 5,
                 valueText = { "$it $minUnit" }
             )
@@ -191,15 +192,15 @@ fun ProjectEditScreen(
                 label = stringResource(R.string.label_pomodoros),
                 value = p.pomodorosPerSession,
                 onValueChange = { v -> viewModel.edit { it.copy(pomodorosPerSession = v) } },
-                min = 1,
-                max = 20
+                min = ProjectLimits.pomodorosPerSession.first,
+                max = ProjectLimits.pomodorosPerSession.last
             )
             Stepper(
                 label = stringResource(R.string.label_daily_goal),
                 value = p.dailyGoal,
                 onValueChange = { v -> viewModel.edit { it.copy(dailyGoal = v) } },
-                min = 0,
-                max = 30
+                min = ProjectLimits.dailyGoal.first,
+                max = ProjectLimits.dailyGoal.last
             )
 
             FieldLabel(stringResource(R.string.label_pomodoro_color))
@@ -223,8 +224,8 @@ fun ProjectEditScreen(
                     label = stringResource(R.string.label_long_break_minutes),
                     value = p.longBreakMinutes,
                     onValueChange = { v -> viewModel.edit { it.copy(longBreakMinutes = v) } },
-                    min = 1,
-                    max = 120,
+                    min = ProjectLimits.longBreakMinutes.first,
+                    max = ProjectLimits.longBreakMinutes.last,
                     sliderStep = 5,
                     valueText = { "$it $minUnit" }
                 )
@@ -232,8 +233,8 @@ fun ProjectEditScreen(
                     label = stringResource(R.string.label_long_break_interval),
                     value = p.longBreakInterval,
                     onValueChange = { v -> viewModel.edit { it.copy(longBreakInterval = v) } },
-                    min = 2,
-                    max = 12
+                    min = ProjectLimits.longBreakInterval.first,
+                    max = ProjectLimits.longBreakInterval.last
                 )
             }
         }

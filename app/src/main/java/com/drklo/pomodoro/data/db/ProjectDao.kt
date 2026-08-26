@@ -17,6 +17,13 @@ interface ProjectDao {
     @Query("SELECT * FROM projects ORDER BY orderIndex ASC, id ASC")
     fun observeAll(): Flow<List<ProjectEntity>>
 
+    /** A snapshot for export, archived included: a backup is a moment, not a feed. */
+    @Query("SELECT * FROM projects ORDER BY orderIndex ASC, id ASC")
+    suspend fun getAll(): List<ProjectEntity>
+
+    @Query("DELETE FROM projects")
+    suspend fun deleteAll()
+
     @Query("SELECT * FROM projects WHERE id = :id")
     suspend fun getById(id: Long): ProjectEntity?
 

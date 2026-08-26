@@ -1,5 +1,6 @@
 package com.drklo.pomodoro.ui.settings
 
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -19,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -48,6 +50,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.drklo.pomodoro.R
+import com.drklo.pomodoro.data.backup.ProjectBackup
 import com.drklo.pomodoro.data.model.AppLanguage
 import com.drklo.pomodoro.data.model.Project
 import com.drklo.pomodoro.data.model.ThemeMode
@@ -58,6 +61,7 @@ import com.drklo.pomodoro.ui.common.Stepper
 import com.drklo.pomodoro.ui.common.TimeOfDayField
 import com.drklo.pomodoro.util.BatteryOptimization
 import com.drklo.pomodoro.util.findActivity
+import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -92,6 +96,53 @@ fun SettingsScreen(
     // settings, and the launcher callback only ever fires for the trip this screen started.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         batteryExempt = BatteryOptimization.isIgnoring(context)
+    }
+
+    // The file the user picked, held until they confirm the replacement.
+    var pendingImport by remember { mutableStateOf<Uri?>(null) }
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri -> uri?.let(viewModel::exportTo) }
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri -> pendingImport = uri }
+
+    val suggestedFileName = stringResource(R.string.backup_file_name, LocalDate.now().toString())
+
+    pendingImport?.let { uri ->
+        AlertDialog(
+            onDismissRequest = { pendingImport = null },
+            title = { Text(stringResource(R.string.backup_confirm_title)) },
+            text = { Text(stringResource(R.string.backup_confirm_body)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pendingImport = null
+                        viewModel.importFrom(uri)
+                    }
+                ) { Text(stringResource(R.string.backup_confirm_action)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingImport = null }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            }
+        )
+    }
+
+    // Reported in a dialog rather than a transient message: a failed restore is not something to
+    // let scroll past, and a successful one is worth a positive acknowledgement.
+    val backup by viewModel.backup.collectAsStateWithLifecycle()
+    backup?.takeIf { it != BackupOutcome.Working }?.let { outcome ->
+        AlertDialog(
+            onDismissRequest = viewModel::acknowledgeBackup,
+            text = { Text(backupMessage(outcome)) },
+            confirmButton = {
+                TextButton(onClick = viewModel::acknowledgeBackup) {
+                    Text(stringResource(R.string.action_ok))
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -218,6 +269,26 @@ fun SettingsScreen(
                 }
             }
 
+            // --- Data ---
+            item {
+                SettingsGroup(stringResource(R.string.section_data)) {
+                    ActionRow(
+                        label = stringResource(R.string.action_export),
+                        summary = stringResource(R.string.action_export_summary),
+                        onClick = { exportLauncher.launch(suggestedFileName) }
+                    )
+                    RowDivider()
+                    ActionRow(
+                        label = stringResource(R.string.action_import),
+                        summary = stringResource(R.string.action_import_summary),
+                        // Any type: a JSON file arrives as application/json from one file manager
+                        // and as text/plain or octet-stream from another, and a filter that guesses
+                        // wrong greys out the very file the user came to pick.
+                        onClick = { importLauncher.launch(arrayOf("*/*")) }
+                    )
+                }
+            }
+
             // --- Appearance ---
             item {
                 SettingsGroup(stringResource(R.string.section_appearance)) {
@@ -254,6 +325,41 @@ fun SettingsScreen(
             }
         }
     }
+}
+
+/** A tappable line with a title and an explanation under it. */
+@Composable
+private fun ActionRow(label: String, summary: String, onClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 10.dp)
+    ) {
+        Text(label)
+        Caption(summary)
+    }
+}
+
+/**
+ * One sentence per outcome, saying what happened and — when something went wrong — which of the two
+ * possible culprits it was: the file, or the state the app is in.
+ */
+@Composable
+private fun backupMessage(outcome: BackupOutcome): String = when (outcome) {
+    is BackupOutcome.Working -> stringResource(R.string.backup_working)
+    is BackupOutcome.Exported -> stringResource(R.string.backup_exported, outcome.projects)
+    is BackupOutcome.Imported -> stringResource(R.string.backup_imported, outcome.projects)
+    is BackupOutcome.RefusedTimerRunning -> stringResource(R.string.backup_error_timer)
+    is BackupOutcome.FileUnavailable -> stringResource(R.string.backup_error_file)
+    is BackupOutcome.Rejected -> stringResource(
+        when (outcome.failure) {
+            ProjectBackup.Failure.UNSUPPORTED_VERSION -> R.string.backup_error_version
+            ProjectBackup.Failure.MALFORMED -> R.string.backup_error_malformed
+            ProjectBackup.Failure.INVALID_VALUE -> R.string.backup_error_values
+            ProjectBackup.Failure.NO_PROJECTS -> R.string.backup_error_empty
+        }
+    )
 }
 
 @Composable

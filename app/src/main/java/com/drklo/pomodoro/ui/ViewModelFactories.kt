@@ -5,6 +5,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.drklo.pomodoro.PomodoroApp
+import com.drklo.pomodoro.data.model.TimerStatus
 import com.drklo.pomodoro.ui.main.MainViewModel
 import com.drklo.pomodoro.ui.reports.ReportsViewModel
 import com.drklo.pomodoro.ui.settings.ProjectEditViewModel
@@ -49,7 +50,14 @@ object ViewModelFactories {
             val app = app()
             SettingsViewModel(
                 settingsRepo = app.container.settingsRepository,
-                projectRepo = app.container.projectRepository
+                projectRepo = app.container.projectRepository,
+                backupRepo = app.container.backupRepository,
+                contentResolver = app.contentResolver,
+                // From the package manager rather than BuildConfig, which this module does not
+                // generate. It is written into the file for a human reading it later, nothing more.
+                appVersion = app.packageManager.getPackageInfo(app.packageName, 0).versionName.orEmpty(),
+                // Asked at the moment of the import, not captured now.
+                timerIsBusy = { app.container.timerEngine.state.value.status != TimerStatus.IDLE }
             )
         }
     }

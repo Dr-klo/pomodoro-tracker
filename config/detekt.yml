@@ -7,6 +7,11 @@ naming:
     ignoreAnnotated: ['Composable']
 
 complexity:
+  TooManyFunctions:
+    # A Room DAO is one table's query surface, not a class doing too many things: each function is
+    # a single SQL statement with a name. The rule counts methods to find objects that have grown
+    # responsibilities, and a DAO cannot grow one — it can only be asked about more columns.
+    ignoreAnnotated: ['Dao']
   LongMethod:
     # Composable layout functions are long by nature: they describe a tree, not an algorithm.
     ignoreAnnotated: ['Composable']

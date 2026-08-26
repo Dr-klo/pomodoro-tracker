@@ -18,6 +18,11 @@ complexity:
     ignoreAnnotated: ['Composable']
 
 style:
+  UnusedPrivateMember:
+    # A @Preview function has no caller by design: Android Studio's preview pane invokes it by
+    # reflection. Marking each one @Suppress would be one annotation per preview stating the same
+    # fact, so it is stated once here.
+    ignoreAnnotated: ['Preview']
   MagicNumber:
     # A number bound to a name is not magic any more — naming it is the fix the rule asks for, and
     # flagging the declaration that does the naming punishes the fix.

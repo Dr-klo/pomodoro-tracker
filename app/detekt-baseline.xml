@@ -4,7 +4,7 @@
   <CurrentIssues>
     <ID>CyclomaticComplexMethod:DonutChart.kt$@Composable fun DonutChart( values: List&lt;ProjectValue&gt;, centerLabel: String, modifier: Modifier = Modifier )</ID>
     <ID>CyclomaticComplexMethod:MainScreen.kt$@Composable fun MainScreen( onOpenSettings: () -&gt; Unit, onOpenReports: () -&gt; Unit, modifier: Modifier = Modifier, viewModel: MainViewModel = viewModel(factory = ViewModelFactories.main) )</ID>
-    <ID>CyclomaticComplexMethod:MainScreen.kt$@Composable private fun ProjectPage( project: Project, /** * Live timer state, or null for a page that is merely being browsed. Passing the whole state to * every page meant all of them recomposed once a second, redrawing canvases for projects that * only ever show a static preview. */ state: TimerState?, isLandscape: Boolean, holdFinishedColor: Boolean, actions: PageActions )</ID>
+    <ID>CyclomaticComplexMethod:MainScreen.kt$@Composable internal fun ProjectPage( project: Project, /** * Live timer state, or null for a page that is merely being browsed. Passing the whole state to * every page meant all of them recomposed once a second, redrawing canvases for projects that * only ever show a static preview. */ state: TimerState?, isLandscape: Boolean, holdFinishedColor: Boolean, actions: PageActions )</ID>
     <ID>CyclomaticComplexMethod:WeekJournal.kt$@Composable fun WeekJournal( logs: List&lt;PomodoroLog&gt;, today: LocalDate, projects: List&lt;Project&gt;, modifier: Modifier = Modifier )</ID>
     <ID>LoopWithTooManyJumpStatements:Aggregation.kt$for</ID>
     <ID>MagicNumber:Aggregation.kt$5</ID>

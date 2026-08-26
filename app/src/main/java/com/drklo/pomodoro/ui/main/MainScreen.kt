@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,6 +19,8 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Menu
@@ -46,6 +49,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
@@ -67,6 +71,7 @@ import com.drklo.pomodoro.ui.main.components.PausedBookmark
 import com.drklo.pomodoro.ui.main.components.SessionBullets
 import com.drklo.pomodoro.ui.main.components.TimerDial
 import com.drklo.pomodoro.ui.theme.DefaultPomodoroColor
+import com.drklo.pomodoro.ui.theme.PomodoroTheme
 import com.drklo.pomodoro.util.findActivity
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -291,7 +296,8 @@ fun MainScreen(
 }
 
 /** What a carousel page can do; they always travel together, so they travel as one. */
-private data class PageActions(
+/** Internal, not private: the landscape layout test lays a page out directly. */
+internal data class PageActions(
     val onTap: () -> Unit,
     val onReset: () -> Unit,
     val onSeek: (Float) -> Unit,
@@ -328,7 +334,7 @@ private fun EmptyProjects(onOpenSettings: () -> Unit) {
 }
 
 @Composable
-private fun ProjectPage(
+internal fun ProjectPage(
     project: Project,
     /**
      * Live timer state, or null for a page that is merely being browsed. Passing the whole state to
@@ -427,41 +433,17 @@ private fun ProjectPage(
         )
     }
 
-    val details = @Composable {
-        // A row of circles says nothing out loud. Merged into one node so a screen reader announces
-        // the progress once instead of walking eight unlabelled dots.
-        val bulletsDescription = stringResource(
-            R.string.cd_session_progress,
-            filledBullets,
-            project.pomodorosPerSession
-        )
-        SessionBullets(
-            filled = filledBullets,
-            total = project.pomodorosPerSession,
+    val details = @Composable { compact: Boolean ->
+        ProjectDetails(
+            project = project,
+            filledBullets = filledBullets,
+            phaseName = phaseName,
+            timeText = timeText,
             color = fg,
-            modifier = Modifier.semantics(mergeDescendants = true) {
-                contentDescription = bulletsDescription
-            }
+            compact = compact,
+            onChangePhase = onChangePhase.takeIf { canChangePhase },
+            changePhaseLabel = changePhaseLabel
         )
-        Spacer(Modifier.height(12.dp))
-        Text(text = project.name, fontSize = 22.sp, fontWeight = FontWeight.Medium, color = fg)
-        Spacer(Modifier.height(6.dp))
-        // Phase type — always visible so the user knows pomodoro vs break (#7); tap to change (F-021).
-        Text(
-            text = phaseName,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Medium,
-            color = fg.copy(alpha = 0.9f),
-            // The label reads as "Pomodoro"; onClickLabel is what tells a screen reader that
-            // activating it switches phase, which is not guessable from the text.
-            modifier = if (canChangePhase) {
-                Modifier.clickable(onClickLabel = changePhaseLabel) { onChangePhase() }
-            } else {
-                Modifier
-            }
-        )
-        Spacer(Modifier.height(2.dp))
-        Text(text = timeText, fontSize = 40.sp, fontWeight = FontWeight.SemiBold, color = fg)
     }
 
     Box(modifier = Modifier.fillMaxSize().background(bgColor)) {
@@ -471,12 +453,23 @@ private fun ProjectPage(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                dial(Modifier.weight(1f).fillMaxHeight().padding(8.dp))
+                // The dial gets a half of the row to sit in, and picks a square inside it. It used
+                // to take `weight(1f).fillMaxHeight()` directly: that fixes width *and* height, and
+                // `aspectRatio` cannot choose a side when both are already decided — it passes the
+                // constraints through and the circle comes out as an ellipse. Wide-and-short
+                // landscapes stretched it badly (reported on a Galaxy S23). Inside a Box the
+                // constraints are loose, so aspectRatio settles on min(width, height).
+                Box(
+                    modifier = Modifier.weight(1f).fillMaxHeight().padding(8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    dial(Modifier.aspectRatio(1f))
+                }
                 Column(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
-                ) { details() }
+                ) { details(true) }
             }
         } else {
             Column(
@@ -486,7 +479,7 @@ private fun ProjectPage(
             ) {
                 dial(Modifier.fillMaxWidth().widthIn(max = 360.dp).padding(8.dp))
                 Spacer(Modifier.height(32.dp))
-                details()
+                details(false)
             }
         }
 
@@ -503,5 +496,103 @@ private fun ProjectPage(
                     .clickable { onReset() }
             )
         }
+    }
+}
+
+/**
+ * The text beside (landscape) or below (portrait) the dial.
+ *
+ * `compact` is landscape: the height there is a fraction of the portrait one, and at the portrait
+ * type sizes the phase and the clock fell off the bottom of a Galaxy S23. Shrinking rather than
+ * scrolling, because the point of this screen is a time readable at a glance, and a time you have
+ * to scroll to is not one.
+ */
+@Composable
+private fun ProjectDetails(
+    project: Project,
+    filledBullets: Int,
+    phaseName: String,
+    timeText: String,
+    color: Color,
+    compact: Boolean,
+    /** Null when the phase cannot be changed right now — while running (F-021). */
+    onChangePhase: (() -> Unit)?,
+    changePhaseLabel: String
+) {
+    // A row of circles says nothing out loud. Merged into one node so a screen reader announces the
+    // progress once instead of walking eight unlabelled dots.
+    val bulletsDescription = stringResource(
+        R.string.cd_session_progress,
+        filledBullets,
+        project.pomodorosPerSession
+    )
+    SessionBullets(
+        filled = filledBullets,
+        total = project.pomodorosPerSession,
+        color = color,
+        modifier = Modifier.semantics(mergeDescendants = true) {
+            contentDescription = bulletsDescription
+        }
+    )
+    Spacer(Modifier.height(if (compact) 8.dp else 12.dp))
+    Text(
+        text = project.name,
+        fontSize = if (compact) 18.sp else 22.sp,
+        fontWeight = FontWeight.Medium,
+        color = color
+    )
+    Spacer(Modifier.height(if (compact) 4.dp else 6.dp))
+    // Phase type — always visible so the user knows pomodoro vs break (#7); tap to change (F-021).
+    Text(
+        text = phaseName,
+        fontSize = if (compact) 15.sp else 18.sp,
+        fontWeight = FontWeight.Medium,
+        color = color.copy(alpha = 0.9f),
+        // The label reads as "Pomodoro"; onClickLabel is what tells a screen reader that activating
+        // it switches phase, which is not guessable from the text.
+        modifier = if (onChangePhase != null) {
+            Modifier.clickable(onClickLabel = changePhaseLabel) { onChangePhase() }
+        } else {
+            Modifier
+        }
+    )
+    Spacer(Modifier.height(2.dp))
+    Text(
+        text = timeText,
+        fontSize = if (compact) 30.sp else 40.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = color
+    )
+}
+
+/**
+ * Landscape at a Galaxy S23's window size. Landscape is the orientation nobody remembers to open,
+ * which is how a stretched dial and a clipped clock reached a published release; a preview puts it
+ * in front of whoever edits this file. ProjectPageLandscapeTest is what actually enforces it.
+ */
+@Preview(name = "Landscape (S23)", widthDp = 892, heightDp = 412)
+@Composable
+private fun ProjectPageLandscapePreview() {
+    PomodoroTheme {
+        ProjectPage(
+            project = Project(
+                id = 1,
+                name = "Work",
+                focusMinutes = 25,
+                shortBreakMinutes = 5,
+                pomodorosPerSession = 4,
+                pomodoroColor = 0xFFB74B4B.toInt(),
+                breakColor = 0xFF4B7BB7.toInt(),
+                dailyGoal = 8,
+                longBreakEnabled = true,
+                longBreakMinutes = 15,
+                longBreakInterval = 4,
+                orderIndex = 0
+            ),
+            state = null,
+            isLandscape = true,
+            holdFinishedColor = false,
+            actions = PageActions(onTap = {}, onReset = {}, onSeek = {}, onChangePhase = {})
+        )
     }
 }

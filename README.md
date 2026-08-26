@@ -137,7 +137,7 @@ keyPassword=…
 ```
 
 Without that file the app still builds; the release variant simply comes out unsigned.
-`./gradlew :app:assembleRelease` produces a ~2.9 MB APK (R8 and resource shrinking are on).
+`./gradlew :app:assembleRelease` produces a ~3 MB APK (R8 and resource shrinking are on).
 
 ### Samsung background note
 
@@ -210,11 +210,15 @@ Stated plainly, because a reader will find them anyway:
   phase, state and remaining time and can be activated by a screen reader (`F-R0-01`, closed) — but
   Reports and Settings have had no equivalent pass, and the charts are Canvas drawings with nothing
   behind them for a screen reader to read.
-- **UI tests cover components, not screens.** 86 tests run on the JVM: the timer engine,
-  aggregation, formatting and locale rules, plus ten Compose tests that pin the semantics of the
-  dial, the stepper and the segmented choice under Robolectric. Two instrumented tests cover Room
-  migration and project archiving on a real device. No test drives a whole screen or a user journey
-  end to end; those are verified by hand.
+- **UI tests cover components, not screens.** 116 tests run on the JVM: the timer engine,
+  aggregation, formatting and locale rules, the backup format and a full export/import round trip
+  between two in-memory databases, plus Compose tests that pin the semantics of the dial, the
+  stepper and the segmented choice under Robolectric. Two instrumented tests cover Room migration
+  and project archiving on a real device. No test drives a whole screen or a user journey end to
+  end; those are verified by hand.
+- **What only a device can show is checked on one.** Window insets, rotation and dialog sizing have
+  no JVM equivalent, so the landscape faults fixed in 1.2 were found and verified by measuring the
+  running app — not by a test that could catch them again.
 - **One device family.** Developed and checked on a Samsung Galaxy A5x running Android 11.
   `targetSdk` is current, but the runtime behaviour changes that come with it are untested on newer
   Android versions.

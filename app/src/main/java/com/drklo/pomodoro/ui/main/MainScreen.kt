@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,7 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -43,7 +44,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -191,11 +191,6 @@ fun MainScreen(
             .collect { page -> viewModel.onSelectProject(page % projects.size) }
     }
 
-    // Container size rather than Configuration.screenWidthDp: the configuration values are not
-    // observable state, so a rotation would not necessarily recompose what depends on them.
-    val containerSize = LocalWindowInfo.current.containerSize
-    val isLandscape = containerSize.width > containerSize.height
-
     // Paused session "parked" on its project; shown as a bookmark while browsing other projects.
     val pausedProject = if (state.status == TimerStatus.PAUSED) state.project else null
     val viewedProject = projects.getOrNull(pagerState.currentPage % projects.size)
@@ -203,7 +198,7 @@ fun MainScreen(
     var shakeTrigger by remember { androidx.compose.runtime.mutableIntStateOf(0) }
     val scope = rememberCoroutineScope()
 
-    Box(
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
             .pointerInput(Unit) {
@@ -215,6 +210,14 @@ fun MainScreen(
                 }
             }
     ) {
+        // Measured here rather than read from LocalWindowInfo.containerSize. That value did not
+        // change when the phone was turned: the activity handles the rotation itself
+        // (android:configChanges), so nothing recreates it, and the screen went on drawing the
+        // layout for the orientation it had started in — a landscape arrangement squeezed into a
+        // portrait window and the other way round. Constraints cannot go stale that way: they come
+        // from the measurement that has just happened.
+        val isLandscape = maxWidth > maxHeight
+
         HorizontalPager(
             state = pagerState,
             userScrollEnabled = canSwipe,
@@ -267,7 +270,14 @@ fun MainScreen(
             Row(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .statusBarsPadding()
+                    // Every system bar, not just the status bar. The window is drawn edge to edge,
+                    // and in landscape the navigation bar sits on the right — exactly where these
+                    // icons are. With only statusBarsPadding they went under it: the reports icon
+                    // was reduced to a sliver and the settings one was entirely off-screen, so
+                    // there was no way into settings while the phone was sideways. The auto-hide
+                    // below used to mask it after three seconds; a control has to be reachable
+                    // before that too.
+                    .safeDrawingPadding()
                     .padding(4.dp)
             ) {
                 IconButton(onClick = onOpenReports) {
@@ -321,7 +331,10 @@ private fun EmptyProjects(onOpenSettings: () -> Unit) {
             onClick = onOpenSettings,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .statusBarsPadding()
+                // Same reasoning as the main screen's icons: in landscape the navigation bar is on
+                // the right. This is the only control on the placeholder, so losing it under the
+                // bar would leave the screen with no way out at all.
+                .safeDrawingPadding()
                 .padding(4.dp)
         ) {
             Icon(
